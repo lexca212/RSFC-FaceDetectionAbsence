@@ -1,0 +1,53 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Karyawan - RS Fitri Candra</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link rel="stylesheet" href={% static '/assets/styles/addUser.css' %}>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Upload Karyawan</h2>
+        <form action="{% url 'addUser' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="nik">NIK</label>
+                <input type="text" name="nik" id="nik" required placeholder="Masukkan NIK">
+            </div>
+            <div class="form-group">
+                <label for="name">NAMA</label>
+                <input type="text" name="name" id="name" required placeholder="Masukkan Nama">
+            </div>
+            <div class="form-group">
+                <label for="divisi">DIVISI</label>
+                <input type="text" name="divisi" id="divisi" required placeholder="Masukkan Divisi">
+            </div>
+            <div class="form-group">
+                <label for="photo">FOTO</label>
+                <div id="camera-container">
+                    <video id="camera-feed" autoplay playsinline></video>
+                    <canvas id="photo-canvas" style="display:none;"></canvas>
+                </div>
+                <button type="button" id="capture-photo">Ambil Foto</button>
+                <img id="photo-preview" alt="Captured photo">
+                <input type="hidden" name="photo" id="photo-data">
+            </div>
+            <div class="button-container">
+                <button type="submit" class="button">Upload</button>
+                <button type="button" class="button" onclick="window.location.href=''">Absensi</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src={% static '/assets/scripts/addUser.js' %}></script>
+</body>
+
+</html>
