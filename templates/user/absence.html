@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absensi Kamera</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href={% static '/assets/styles/absence.css' %}>
+</head>
+
+<body onload="startCamera()">
+    <div class="container">
+        <h2>Absensi Karyawan</h2>
+        <center>
+            <p>
+                <span id="dateDisplay"></span><br>
+                <span id="timeDisplay"></span>
+            </p>
+        </center>
+
+        <form id="absenForm" method="POST" enctype="multipart/form-data" action="">
+            {% csrf_token %}
+            <div class="video-container">
+                <video autoplay></video>
+            </div>
+
+            
+            <!-- Hidden input for the captured photo in base64 format -->
+            <input type="hidden" name="photo" id="photoInput">
+            <div class="button-container">
+                <button type="button" onclick="capturePhoto()" id="captureBtn">Capture Photo</button>
+                <button type="submit">Absen</button>
+            </div>
+        </form>
+        <div id="resultDisplay" style="display:none;">
+            <h3>Hasil Absensi:</h3>
+            <p id="nikResult"></p>
+            <p id="nameResult"></p>
+            <p id="dateResult"></p>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        const ABSENCE_URL = "{% url 'absence' %}";
+    </script>
+    <script src= {% static '/assets/scripts/absence.js' %}></script>
+</body>
+
+</html>
