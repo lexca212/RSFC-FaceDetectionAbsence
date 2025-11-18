@@ -6,16 +6,16 @@
     </div>
     <!-- /.card-header -->
     <!-- form start -->
-    <form role="form" method="post" action="{% url 'addDivisi' %}">
+    <form role="form" method="post" action="{% url 'editDivisi' divisi.id %}">
         {% csrf_token %}
         <div class="card-body">
             <div class="form-group">
                 <label for="divisi_id">ID Divisi</label>
-                <input type="text" class="form-control" name="divisi_id" id="divisi_id" placeholder="Divisi ID" required>
+                <input value="{{ divisi.id }}" readonly type="text" class="form-control" name="divisi_id" id="divisi_id" placeholder="Divisi ID" required>
             </div>
             <div class="form-group">
                 <label for="divisi_name">Nama Divisi</label>
-                <input type="text" class="form-control" name="divisi_name" id="divisi_name" placeholder="Nama Divisi" required>
+                <input value="{{ divisi.name }}" type="text" class="form-control" name="divisi_name" id="divisi_name" placeholder="Nama Divisi" required>
             </div>
         </div>
         <div class="card-footer">

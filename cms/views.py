@@ -85,6 +85,38 @@ def addDivisi(request):
     return render(request, 'admin/divisi_master/addForm.html', context)
 
 @login_auth
+def editDivisi(request, id):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
+
+    if request.method == 'POST':
+      divisi_id = request.POST['divisi_id']
+      divisi_name = request.POST['divisi_name']
+
+      try:
+        divisi = get_object_or_404(MasterDivisions, id=divisi_id)
+
+        divisi.name = divisi_name
+        divisi.save()
+
+        messages.success(request, 'Data divisi berhasil diupdate.')
+        return redirect('/admins/divisi_master')
+      
+      except Exception as e:
+        messages.error(request, f'Gagal mengupdate data divisi: {e}')
+        return redirect('/admins/divisi_master')
+    
+    divisi = get_object_or_404(MasterDivisions, id=id)
+
+    print(f'Divisi: {divisi.id}, {divisi.name}')
+
+    context = {
+      'user': user,
+      'title': 'Edit Divisi',
+      'divisi': divisi,
+    }
+    return render(request, 'admin/divisi_master/editForm.html', context)
+
+@login_auth
 def addUser(request):
     if request.method == 'POST':
       nik = request.POST['nik']

@@ -23,7 +23,7 @@
                 <td class="col-3">{{ divisi.id }}</td>
                 <td class="col-5">{{ divisi.name }}</td>
                 <td class="col-3 text-center">
-                  <a href="" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i> Edit</a> |
+                  <a href="{% url 'editDivisi' divisi.id %}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i> Edit</a> |
                   <a href="" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i> Delete</a>
                 </td>
               </tr>
