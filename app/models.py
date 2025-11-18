@@ -5,7 +5,7 @@ class Users(models.Model):
     nik = models.CharField(max_length=20, unique=True, primary_key=True)
     name = models.CharField(max_length=100)
     photo = models.ImageField(upload_to='static/img')
-    divisi_id = models.CharField(max_length=100,null=True)
+    divisi = models.CharField(max_length=100,null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

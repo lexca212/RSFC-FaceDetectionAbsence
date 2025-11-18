@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect , get_object_or_404
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.http import JsonResponse
+from .decorators import login_auth
 from django.contrib import messages
 from app.models import *
 from .models import *
@@ -16,7 +17,7 @@ def login(request):
         password = request.POST['password']
 
         try:
-            user = Admins.objects.get(username=username)
+            user = get_object_or_404(Admins, username=username)
 
             if check_password(password, user.password):
               request.session['nik_id'] = user.nik_id
@@ -27,16 +28,32 @@ def login(request):
         
     return render(request, 'admin/login.html')
 
+@login_auth
 def dashboard(request):
-    return render(request, 'admin/dashboard.html')
+    # del request.session['nik_id']
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
 
+    context = {'user': user}
+
+    return render(request, 'admin/dashboard.html', context)
+
+@login_auth
 def divisi_master(request):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
+
     divisi_list = MasterDivisions.objects.all()
-    context = {'divisi_list': divisi_list}
+
+    context = {
+       'divisi_list': divisi_list, 
+       'user': user
+    }
 
     return render(request, 'admin/divisi_master/index.html', context)
 
+@login_auth
 def addDivisi(request):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
+
     if request.method == 'POST':
       divisi_id = request.POST['divisi_id']
       divisi_name = request.POST['divisi_name']
@@ -57,8 +74,11 @@ def addDivisi(request):
 
       messages.success(request, 'Data divisi berhasil diupload.')
       return redirect('/admins/divisi_master')
-    return render(request, 'admin/divisi_master/addForm.html')
+    
+    context = {'user': user}
+    return render(request, 'admin/divisi_master/addForm.html', context)
 
+@login_auth
 def addUser(request):
     if request.method == 'POST':
       nik = request.POST['nik']
