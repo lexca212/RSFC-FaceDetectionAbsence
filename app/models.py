@@ -4,8 +4,8 @@ from django.db import models
 class Users(models.Model):
     nik = models.CharField(max_length=20, unique=True, primary_key=True)
     name = models.CharField(max_length=100)
-    divisi = models.CharField(max_length=50,null=True)
     photo = models.ImageField(upload_to='static/img')
+    divisi_id = models.CharField(max_length=100,null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -21,8 +21,10 @@ class Admins(models.Model):
 class InAbsences(models.Model):
     id = models.AutoField(primary_key=True)
     nik = models.ForeignKey(Users, on_delete=models.CASCADE)
-    date = models.DateTimeField()
-    status = models.CharField(max_length=20)
+    date_in = models.DateTimeField()
+    status_in = models.CharField(max_length=20)
+    date_out = models.DateTimeField(null=True, blank=True)
+    status_out = models.CharField(max_length=20, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
