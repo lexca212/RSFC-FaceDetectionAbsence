@@ -5,6 +5,7 @@ from django.core.files.base import ContentFile
 from django.http import JsonResponse
 from django.contrib import messages
 from app.models import *
+from .models import *
 import base64
 
 # Create your views here.
@@ -25,6 +26,15 @@ def login(request):
             return redirect('/admins/login')
         
     return render(request, 'admin/login.html')
+
+def dashboard(request):
+    return render(request, 'admin/dashboard.html')
+
+def divisi_master(request):
+    divisi_list = MasterDivisions.objects.all()
+    context = {'divisi_list': divisi_list}
+
+    return render(request, 'admin/divisi_master/index.html', context)
 
 def addUser(request):
     if request.method == 'POST':

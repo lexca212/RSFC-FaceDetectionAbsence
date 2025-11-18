@@ -1,0 +1,43 @@
+{% extends 'layouts/layout.html' %}
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <a href="" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Tambah Divisi</a>
+    </div>
+    <!-- /.card-header -->
+    <div class="card-body">
+        <table id="example1" class="table table-bordered table-striped">
+            <thead>
+                <tr class="text-center">
+                    <th class="col-1">No</th>
+                    <th class="col-3">ID Divisi</th>
+                    <th class="col-5">Nama Divisi</th>
+                    <th class="col-3">Aksi</th>
+                </tr>
+            </thead>
+                <tr>
+                  {% if divisi_list %}
+                  {% regroup divisi_list by forloop.counter0 as index %}
+                  {% for divisi in divisi_list %}
+                    <td class="col-1 text-center">{{ forloop.counter }}</td>
+                    <td class="col-3">{{ divisi.id }}</td>
+                    <td class="col-5">{{ divisi.name }}</td>
+                    <td class="col-3 text-center">
+                      <a href="" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i> Edit</a> |
+                      <a href="" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i> Delete</a>
+                    </td>
+                  {% endfor %}
+                  {% else %}
+                    <td colspan="4" class="text-center">No Divisi Available</td>
+                  {% endif %}
+                </tr>
+            <tbody>
+            </tbody>
+
+        </table>
+    </div>
+    <!-- /.card-body -->
+</div>
+<!-- /.card -->
+
+{% endblock%}
