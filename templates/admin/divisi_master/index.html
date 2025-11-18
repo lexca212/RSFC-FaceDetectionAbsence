@@ -23,8 +23,11 @@
                 <td class="col-3">{{ divisi.id }}</td>
                 <td class="col-5">{{ divisi.name }}</td>
                 <td class="col-3 text-center">
-                  <a href="{% url 'editDivisi' divisi.id %}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i> Edit</a> |
-                  <a href="" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i> Delete</a>
+                  <a href="{% url 'editDivisi' divisi.id %}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i> Edit</a>
+                  |
+                  <a href="javascript:void(0);" class="btn btn-danger btn-sm btn-hapus" data-url="{% url 'deleteDivisi' divisi.id %}">
+                    <i class="fa fa-trash"></i> Hapus
+                  </a>
                 </td>
               </tr>
               {% endfor %}
@@ -54,4 +57,30 @@
     {% endfor %}
 </script>
 {% endif %}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).on('click', '.btn-hapus', function(e){
+    e.preventDefault(); // cegah langsung menuju link
+
+    var url = $(this).attr("data-url");
+
+    Swal.fire({
+        title: 'Yakin ingin menghapus data ini?',
+        text: "Data yang sudah dihapus tidak bisa dikembalikan!",
+        icon: 'warning',
+        showCancelButton: true,
+        cancelButtonColor: '#E0A800',
+        confirmButtonColor: '#d33',
+        cancelButtonText: 'Batal',
+        confirmButtonText: 'Ya, hapus!',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Redirect manual ke URL penghapusan
+            window.location.href = url;
+        }
+    });
+});
+</script>
 {% endblock%}

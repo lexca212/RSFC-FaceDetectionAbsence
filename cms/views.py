@@ -116,6 +116,18 @@ def editDivisi(request, id):
     }
     return render(request, 'admin/divisi_master/editForm.html', context)
 
+def deleteDivisi(request, id):
+    try:
+      divisi = get_object_or_404(MasterDivisions, id=id)
+      divisi.delete()
+
+      messages.success(request, 'Data divisi berhasil dihapus.')
+      return redirect('/admins/divisi_master')
+    
+    except Exception as e:
+      messages.error(request, f'Gagal menghapus data divisi: {e}')
+      return redirect('/admins/divisi_master')
+
 @login_auth
 def addUser(request):
     if request.method == 'POST':
