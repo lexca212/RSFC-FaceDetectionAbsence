@@ -26,7 +26,12 @@
             </div>
             <div class="form-group">
                 <label for="divisi">DIVISI</label>
-                <input type="text" name="divisi" id="divisi" required placeholder="Masukkan Divisi">
+                <select name="divisi" id="divisi" required>
+                    <option value="" disabled selected disabled>-- Pilih Divisi --</option>
+                    {% for divisi in divisi_list %}
+                        <option value="{{ divisi.id }}">{{ divisi.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
             <div class="form-group">
                 <label for="photo">FOTO</label>

@@ -1,0 +1,90 @@
+{% extends 'layouts/layout.html' %}
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <a href="{% url 'addJadwal' %}" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Tambah Jadwal</a>
+    </div>
+    <!-- /.card-header -->
+    <div class="card-body">
+        <table id="example1" class="table table-bordered table-striped">
+            <thead>
+                <tr class="text-center">
+                    <th class="col-1">No</th>
+                    <th class="col-2">ID Jadwal</th>
+                    <th class="col-3">Nama Jadwal</th>
+                    <th class="col-2">Jam Masuk</th>
+                    <th class="col-2">Jam Keluar</th>
+                    <th class="col-2">Aksi</th>
+                </tr>
+            </thead>
+              {% if jadwal_list %}
+              {% regroup jadwal_list by forloop.counter0 as index %}
+              {% for jadwal in jadwal_list %}
+              <tr class="text-center">
+                <td class="col-1">{{ forloop.counter }}</td>
+                <td class="col-2">{{ jadwal.id }}</td>
+                <td class="col-3 text-left">{{ jadwal.name }}</td>
+                <td class="col-2">{{ jadwal.start_time|time:"H:i:s" }}</td>
+                <td class="col-2">{{ jadwal.end_time|time:"H:i:s" }}</td>
+                <td class="col-2">
+                  <a href="{% url 'editJadwal' jadwal.id %}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i> Edit</a>
+                  |
+                  <a href="javascript:void(0);" class="btn btn-danger btn-sm btn-hapus" data-url="{% url 'deleteJadwal' jadwal.id %}">
+                    <i class="fa fa-trash"></i> Hapus
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+              {% else %}
+                <td colspan="6" class="text-center">No Schedule Available</td>
+              {% endif %}
+            <tbody>
+            </tbody>
+
+        </table>
+    </div>
+    <!-- /.card-body -->
+</div>
+<!-- /.card -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+<script>
+    {% for message in messages %}
+    Swal.fire({
+        icon: "{{ message.tags }}",  
+        title: "{{ message.tags|capfirst }}",
+        text: "{{ message }}",
+        showConfirmButton: false,
+        timer: 3000
+    });
+    {% endfor %}
+</script>
+{% endif %}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).on('click', '.btn-hapus', function(e){
+    e.preventDefault(); // cegah langsung menuju link
+
+    var url = $(this).attr("data-url");
+
+    Swal.fire({
+        title: 'Yakin ingin menghapus data ini?',
+        text: "Data yang sudah dihapus tidak bisa dikembalikan!",
+        icon: 'warning',
+        showCancelButton: true,
+        cancelButtonColor: '#E0A800',
+        confirmButtonColor: '#d33',
+        cancelButtonText: 'Batal',
+        confirmButtonText: 'Ya, hapus!',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Redirect manual ke URL penghapusan
+            window.location.href = url;
+        }
+    });
+});
+</script>
+{% endblock%}

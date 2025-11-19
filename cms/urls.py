@@ -11,5 +11,10 @@ urlpatterns = [
     path('editDivisi/<str:id>', editDivisi, name='editDivisi'),
     path('deleteDivisi/<str:id>', deleteDivisi, name='deleteDivisi'),
 
+    path('jadwal_master/', jadwal_master, name='jadwal_master'),
+    path('addJadwal/', addJadwal, name='addJadwal'),
+    path('editJadwal/<str:id>', editJadwal, name='editJadwal'),
+    path('deleteJadwal/<str:id>', deleteJadwal, name='deleteJadwal'),
+
     path('addUser/', addUser, name='addUser'),
 ]

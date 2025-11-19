@@ -3,8 +3,8 @@ from django.shortcuts import render, redirect , get_object_or_404
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.http import JsonResponse
-from .decorators import login_auth
 from django.contrib import messages
+from .decorators import login_auth
 from app.models import *
 from .models import *
 import base64
@@ -114,8 +114,6 @@ def editDivisi(request, id):
     
     divisi = get_object_or_404(MasterDivisions, id=id)
 
-    print(f'Divisi: {divisi.id}, {divisi.name}')
-
     context = {
       'user': user,
       'title': 'Edit Divisi',
@@ -134,7 +132,95 @@ def deleteDivisi(request, id):
     except Exception as e:
       messages.error(request, f'Gagal menghapus data divisi: {e}')
       return redirect('/admins/divisi_master')
+    
+@login_auth
+def jadwal_master(request):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
 
+    jadwal_list = MasterSchedules.objects.all()
+
+    context = {
+      'user': user,
+      'title': 'Jadwal Master',
+      'jadwal_list': jadwal_list, 
+    }
+
+    return render(request, 'admin/jadwal_master/index.html', context)
+
+def addJadwal(request):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
+
+    if request.method == 'POST':
+      id = request.POST['jadwal_id']
+      name = request.POST['jadwal_name']
+      start_time = request.POST['jam_masuk']
+      end_time = request.POST['jam_keluar']
+
+      # Create new data entry
+      jadwal = MasterSchedules(
+          id=id,
+          name=name,
+          start_time=start_time,
+          end_time=end_time,
+      )
+      jadwal.save()
+
+      messages.success(request, 'Data jadwal berhasil diupload.')
+      return redirect('/admins/jadwal_master')
+    
+    context = {
+      'user': user,
+      'title': 'Tambah Jadwal',
+    }
+    return render(request, 'admin/jadwal_master/addForm.html', context)
+
+@login_auth
+def editJadwal(request, id):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
+
+    if request.method == 'POST':
+      jadwal_id = request.POST['jadwal_id']
+      jadwal_name = request.POST['jadwal_name']
+      start_time = request.POST['jam_masuk']
+      end_time = request.POST['jam_keluar']
+
+      try:
+        jadwal = get_object_or_404(MasterSchedules, id=jadwal_id)
+
+        jadwal.name = jadwal_name
+        jadwal.start_time = start_time
+        jadwal.end_time = end_time
+        jadwal.save()
+
+        messages.success(request, 'Data jadwal berhasil diupdate.')
+        return redirect('/admins/jadwal_master')
+      
+      except Exception as e:
+        messages.error(request, f'Gagal mengupdate data jadwal: {e}')
+        return redirect('/admins/jadwal_master')
+    
+    jadwal = get_object_or_404(MasterSchedules, id=id)
+
+    context = {
+      'user': user,
+      'title': 'Edit Jadwal',
+      'jadwal': jadwal,
+    }
+    return render(request, 'admin/jadwal_master/editForm.html', context)
+
+@login_auth
+def deleteJadwal(request, id):
+    try:
+      jadwal = get_object_or_404(MasterSchedules, id=id)
+      jadwal.delete()
+
+      messages.success(request, 'Data jadwal berhasil dihapus.')
+      return redirect('/admins/jadwal_master')
+    
+    except Exception as e:
+      messages.error(request, f'Gagal menghapus data jadwal: {e}')
+      return redirect('/admins/jadwal_master')
+    
 @login_auth
 def addUser(request):
     if request.method == 'POST':
