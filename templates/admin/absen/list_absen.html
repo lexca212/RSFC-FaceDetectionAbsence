@@ -1,0 +1,53 @@
+{% extends 'layouts/layout.html' %}
+{% load static %}
+{% load dict_filter %}
+{% block content %}
+<h3>{{ title }}</h3>
+
+{% for bulan_key, items in absensi_per_bulan.items %}
+<div class="card card-primary mb-5 shadow collapsed-card">
+  <div class="card-header bg-info text-white">
+    <h4 class="card-title text-2xl font-semibold">{{ bulan_labels|dict_get:bulan_key }}</h4>
+
+    <div class="card-tools">
+      <button type="button" class="btn btn-tool text-white"
+        data-card-widget="collapse">
+        <i class="fas fa-plus"></i>
+      </button>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-bordered table-sm">
+      <thead class="bg-secondary text-white">
+        <tr>
+          <th>NIK</th>
+          <th>Nama</th>
+          <th>Tanggal Masuk</th>
+          <th>Status Masuk</th>
+          <th>Tanggal Keluar</th>
+          <th>Status Keluar</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for absen in items %}
+        <tr>
+          <td>{{ absen.nik.nik }}</td>
+          <td>{{ absen.nik.name }}</td>
+          <td>{{ absen.date_in|date:"d M Y H:i" }}</td>
+          <td>{{ absen.status_in }}</td>
+          <td>
+            {% if absen.date_out %}
+            {{ absen.date_out|date:"d M Y H:i" }}
+            {% else %}
+            -
+            {% endif %}
+          </td>
+          <td>{{ absen.status_out|default:"-" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

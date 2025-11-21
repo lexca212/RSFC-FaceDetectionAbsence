@@ -1,0 +1,28 @@
+{% extends 'layouts/layout.html' %}
+{% load static %}
+{% block content %}
+<style>
+  .b {
+    width: 300px; 
+    height: 100px; 
+    background-color: #75C4EB;
+    color: white;
+  }
+  .b:hover {
+    background-color: #56aedaff;
+    color: white;
+  }
+</style>
+<div>
+      {% for divisi in divisi_list %}
+      <a href="{% url 'absen' divisi.id %}" type="button" class="btn b shadow-lg mb-5 mr-2 "style="width: 300px; height: 100px; ">
+        <h5 class="mt-3" >{{ divisi.id }} <br> {{ divisi.name }}</h5>
+      </a>
+      {% empty %}
+      <div class="card-header bg-danger ml-5" style="width: 92%;">
+        <h4 class="text-center text-bold">Tidak ada divisi yang tersedia <br> Hubungi pihak IT Jika Ini Sebuah Kesalahan !</h4>
+      </div>
+      {% endfor %}
+</div>
+
+{% endblock %}

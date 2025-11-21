@@ -22,5 +22,8 @@ urlpatterns = [
     path('buat_jadwal/', buat_jadwal, name='buat_jadwal'),
     path('save_jadwal/', save_jadwal, name='save_jadwal'),
     path('edit_jadwal/<str:divisi_id>/<int:tahun>/<str:bulan>', edit_jadwal, name='edit_jadwal'),
-    path('update_jadwal/', update_jadwal, name='update_jadwal')
+    path('update_jadwal/', update_jadwal, name='update_jadwal'),
+
+    path('absen/', index_absen, name='absen'),
+    path('absen/<str:divisi_id>', absen, name='absen'),
 ]

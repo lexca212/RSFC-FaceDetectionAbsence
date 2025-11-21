@@ -123,6 +123,7 @@ def editDivisi(request, id):
     }
     return render(request, 'admin/divisi_master/editForm.html', context)
 
+@login_auth
 def deleteDivisi(request, id):
     try:
       divisi = get_object_or_404(MasterDivisions, id=id)
@@ -149,6 +150,7 @@ def jadwal_master(request):
 
     return render(request, 'admin/jadwal_master/index.html', context)
 
+@login_auth
 def addJadwal(request):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
@@ -319,6 +321,7 @@ def mapping_jadwal(request):
     }
     return render(request, "admin/mapping/index.html", context)
 
+@login_auth
 def buat_jadwal(request):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
@@ -354,6 +357,7 @@ def buat_jadwal(request):
 
     return render(request, "admin/mapping/addForm.html", context)
 
+@login_auth
 def save_jadwal(request):
     if request.method == "POST":
         bulan = int(request.POST['bulan'])
@@ -386,6 +390,7 @@ def save_jadwal(request):
         messages.success(request, 'Jadwal karyawan berhasil disimpan.')
         return redirect('/admins/mapping_jadwal')
    
+@login_auth
 def edit_jadwal(request, divisi_id, tahun, bulan):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
     from datetime import datetime
@@ -432,7 +437,8 @@ def edit_jadwal(request, divisi_id, tahun, bulan):
     }
 
     return render(request, "admin/mapping/editForm.html", context)
-    
+
+@login_auth  
 def update_jadwal(request):
     if request.method == "POST":
         bulan = int(request.POST['bulan'])
@@ -477,3 +483,56 @@ def update_jadwal(request):
 
         messages.success(request, "Jadwal karyawan berhasil diperbarui.")
         return redirect('/admins/mapping_jadwal')
+
+@login_auth
+def index_absen(request):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
+
+    divisi_list = MasterDivisions.objects.all()
+
+    context = {
+        'user': user,
+        'divisi_list': divisi_list,
+        'title': 'Dashboard Absen'
+    }
+
+    return render(request, 'admin/absen/index.html', context)
+
+@login_auth
+def absen(request, divisi_id):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
+
+    list_absen = InAbsences.objects.filter(
+        nik__divisi=divisi_id
+    ).select_related('nik')
+
+    absensi_per_bulan = {}
+
+    from datetime import datetime
+
+    for absen in list_absen:
+        bulan_key = absen.date_in.strftime("%Y-%m")
+        
+        if bulan_key not in absensi_per_bulan:
+            absensi_per_bulan[bulan_key] = []
+
+        absensi_per_bulan[bulan_key].append(absen)
+
+    absensi_per_bulan[bulan_key].append
+
+    bulan_labels = {
+        key: datetime.strptime(key, "%Y-%m").strftime("%B %Y")
+        for key in absensi_per_bulan.keys()
+    }
+
+    context = {
+        'user': user,
+        'divisi_id': divisi_id,
+        'absensi_per_bulan': absensi_per_bulan,
+        'bulan_labels': bulan_labels,      
+        'title': f'Absen Divisi {divisi_id}',
+    }
+
+    return render(request, 'admin/absen/list_absen.html', context)
+
+   
