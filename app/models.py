@@ -25,6 +25,7 @@ class InAbsences(models.Model):
     status_in = models.CharField(max_length=20)
     date_out = models.DateTimeField(null=True, blank=True)
     status_out = models.CharField(max_length=20, null=True, blank=True)
+    schedule = models.ForeignKey('cms.MasterSchedules', null=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
