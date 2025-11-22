@@ -22,19 +22,33 @@
         <tr>
           <th>NIK</th>
           <th>Nama</th>
+          <th>Jadwal Masuk</th>
           <th>Tanggal Masuk</th>
           <th>Status Masuk</th>
+          <th>Jadwal Keluar</th>
           <th>Tanggal Keluar</th>
           <th>Status Keluar</th>
         </tr>
       </thead>
       <tbody>
         {% for absen in items %}
-        <tr>
+        <tr class="text-center">
           <td>{{ absen.nik.nik }}</td>
-          <td>{{ absen.nik.name }}</td>
+          <td  class="text-left">{{ absen.nik.name }}</td>
+          <td></td>
           <td>{{ absen.date_in|date:"d M Y H:i" }}</td>
-          <td>{{ absen.status_in }}</td>
+          <td class="
+                {% if absen.status_in == 'Terlambat' %}
+                    bg-danger text-white
+                {% elif absen.status_in == 'Tepat Waktu' %}
+                    bg-primary text-white
+                {% elif absen.status_in == 'Libur'%}
+                    bg-warning text-white
+                {% endif %}
+            ">
+            {{ absen.status_in }}
+          </td>
+          <td></td>
           <td>
             {% if absen.date_out %}
             {{ absen.date_out|date:"d M Y H:i" }}
@@ -42,7 +56,18 @@
             -
             {% endif %}
           </td>
-          <td>{{ absen.status_out|default:"-" }}</td>
+          <td class="
+                {% if absen.status_out == 'Pulang Cepat' %}
+                    bg-danger text-white
+                {% elif absen.status_out == 'Tepat Waktu' %}
+                    bg-primary text-white
+                {% elif absen.status_out == 'Libur' %}
+                    bg-warning text-white
+                {% else %}
+                {% endif %}
+            ">
+            {{ absen.status_out|default:"-" }}
+          </td>
         </tr>
         {% endfor %}
       </tbody>

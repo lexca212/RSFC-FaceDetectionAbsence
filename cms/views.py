@@ -375,6 +375,29 @@ def save_jadwal(request):
 
                 if shift_id:
                     date_str = f"{tahun}-{bulan:02d}-{tgl:02d}"
+                    shift = MasterSchedules.objects.filter(id=shift_id).first()
+
+                    if shift:
+                        if shift.name == 'Libur':
+                            from datetime import datetime
+                            date = datetime.strptime(date_str, "%Y-%m-%d")
+                            is_there = InAbsences.objects.filter(
+                                nik=user,
+                                date_in__date=date.date(),
+                                status_in="Libur"
+                            ).exists()
+
+                            print(f'{is_there}')
+
+                            if not is_there:
+                                InAbsences.objects.create(
+                                    nik=user,
+                                    date_in=date_str,
+                                    status_in="Libur",
+                                    schedule=shift,
+                                    date_out=date_str,
+                                    status_out="Libur"
+                                )
 
                     mapping, created = MappingSchedules.objects.get_or_create(
                         id=f"{user.nik}_{date_str}",
@@ -455,6 +478,8 @@ def update_jadwal(request):
                 shift_key = f"shift_{user.nik}_{tgl}"
                 shift_id = request.POST.get(shift_key) 
 
+                shift = MasterSchedules.objects.filter(id=shift_id).first()
+
                 date_str = f"{tahun}-{bulan:02d}-{tgl:02d}"
                 mapping_id = f"{user.nik}_{date_str}"
 
@@ -467,6 +492,27 @@ def update_jadwal(request):
 
 
                 if shift_id:
+                    if shift:
+                        if shift.name == 'Libur':
+                            from datetime import datetime
+                            date = datetime.strptime(date_str, "%Y-%m-%d")
+                            is_there = InAbsences.objects.filter(
+                                nik=user,
+                                date_in__date=date.date(),
+                                status_in="Libur"
+                            ).exists()
+
+                            print(f'{is_there}')
+
+                            if not is_there:
+                                InAbsences.objects.create(
+                                    nik=user,
+                                    date_in=date_str,
+                                    status_in="Libur",
+                                    schedule=shift,
+                                    date_out=date_str,
+                                    status_out="Libur"
+                                )
                     if mapping_exists:
                         mapping.schedule_id = shift_id
                         mapping.save()
