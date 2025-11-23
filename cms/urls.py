@@ -26,4 +26,6 @@ urlpatterns = [
 
     path('absen/', index_absen, name='absen'),
     path('absen/<str:divisi_id>', absen, name='absen'),
+
+    path('err403/', err403, name='err403')
 ]

@@ -1,10 +1,10 @@
 from django.contrib.auth.hashers import make_password, check_password
 from django.shortcuts import render, redirect , get_object_or_404
+from .decorators import login_auth, superadmin_required
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.http import JsonResponse
 from django.contrib import messages
-from .decorators import login_auth
 from app.models import *
 from .models import *
 import calendar
@@ -23,7 +23,13 @@ def login(request):
 
             if check_password(password, user.password):
               request.session['nik_id'] = user.nik_id
-              return redirect('/admins/dashboard')
+              request.session['is_superadmin'] = user.is_superadmin
+
+              if user.is_superadmin == 1:  
+                return redirect('/admins/dashboard')
+              else:
+                return redirect('/admins/mapping_jadwal')
+                  
         except Admins.DoesNotExist:
             messages.error(request, 'Invalid username or password')
             return redirect('/admins/login') 
@@ -36,7 +42,11 @@ def logout(request):
         pass
     return redirect('/admins/login')
 
-@login_auth
+def err403(request):
+    return render(request, 'admin/403.html')
+
+@login_auth 
+@superadmin_required
 def dashboard(request):
     # del request.session['nik_id']
     user = get_object_or_404(Users, nik=request.session['nik_id'])
@@ -49,6 +59,7 @@ def dashboard(request):
     return render(request, 'admin/dashboard.html', context)
 
 @login_auth
+@superadmin_required
 def divisi_master(request):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
@@ -63,6 +74,7 @@ def divisi_master(request):
     return render(request, 'admin/divisi_master/index.html', context)
 
 @login_auth
+@superadmin_required
 def addDivisi(request):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
@@ -94,6 +106,7 @@ def addDivisi(request):
     return render(request, 'admin/divisi_master/addForm.html', context)
 
 @login_auth
+@superadmin_required
 def editDivisi(request, id):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
@@ -124,6 +137,7 @@ def editDivisi(request, id):
     return render(request, 'admin/divisi_master/editForm.html', context)
 
 @login_auth
+@superadmin_required
 def deleteDivisi(request, id):
     try:
       divisi = get_object_or_404(MasterDivisions, id=id)
@@ -137,6 +151,7 @@ def deleteDivisi(request, id):
       return redirect('/admins/divisi_master')
     
 @login_auth
+@superadmin_required
 def jadwal_master(request):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
@@ -151,6 +166,7 @@ def jadwal_master(request):
     return render(request, 'admin/jadwal_master/index.html', context)
 
 @login_auth
+@superadmin_required
 def addJadwal(request):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
@@ -179,6 +195,7 @@ def addJadwal(request):
     return render(request, 'admin/jadwal_master/addForm.html', context)
 
 @login_auth
+@superadmin_required
 def editJadwal(request, id):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
@@ -213,6 +230,7 @@ def editJadwal(request, id):
     return render(request, 'admin/jadwal_master/editForm.html', context)
 
 @login_auth
+@superadmin_required
 def deleteJadwal(request, id):
     try:
       jadwal = get_object_or_404(MasterSchedules, id=id)
@@ -226,6 +244,7 @@ def deleteJadwal(request, id):
       return redirect('/admins/jadwal_master')
     
 @login_auth
+@superadmin_required
 def addUser(request):
     if request.method == 'POST':
       nik = request.POST['nik']
@@ -531,6 +550,7 @@ def update_jadwal(request):
         return redirect('/admins/mapping_jadwal')
 
 @login_auth
+@superadmin_required
 def index_absen(request):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
@@ -545,6 +565,7 @@ def index_absen(request):
     return render(request, 'admin/absen/index.html', context)
 
 @login_auth
+@superadmin_required
 def absen(request, divisi_id):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
