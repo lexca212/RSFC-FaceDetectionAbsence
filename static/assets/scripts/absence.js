@@ -67,14 +67,58 @@ $(document).ready(function() {
             contentType: false,
             success: function(response) {
                 if (response.status === 'success') {
-                    toastr.success(response.message);
-                    $('#nikResult').text('NIK: ' + response.nik);
-                    $('#nameResult').text('Nama: ' + response.name);
-                    $('#dateResult').text('Waktu Absensi: ' + response.date);
-                    $('#resultDisplay').fadeIn(500);
-                    setTimeout(function() {
+                    // toastr.success(response.message);
+                    // $('#nikResult').text('NIK: ' + response.nik);
+                    // $('#nameResult').text('Nama: ' + response.name);
+                    // $('#dateResult').text('Waktu Absensi: ' + response.date);
+                    // $('#resultDisplay').fadeIn(500);
+                    // setTimeout(function() {
+                    //     location.reload();
+                    // }, 5000);
+                    let content = `
+                        <div class="mt-3">
+                            <p class="mb-1">
+                                <strong style="color: 
+                                    ${(response.status_absen === 'Terlambat' || response.status_absen === 'Pulang Cepat') ? 'red' : 
+                                    (response.status_absen === 'Tepat Waktu' ? 'blue' : 'black')};"
+                                >
+                                ${response.status_absen}
+                                </strong>
+                            </p>
+                            <p class="mb-1"><strong>${response.time}</strong></p>
+                            <table style="text-align: left;">
+                                <tbody>
+                                    <tr>
+                                        <td style="width: 30%;"><strong>NIK</strong></td>
+                                        <td>: ${response.nik}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Nama</strong></td>
+                                        <td>: ${response.name}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Tanggal</strong></td>
+                                        <td>: ${response.date}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p class="mb-1"><strong>${response.minor_message}</strong></p>
+                        </div>
+                    `;
+
+                    Swal.fire({
+                        imageUrl: 'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExdjY1NGVnaGg4bzNiemdmNGRyYXo1cWE1dWZxaG5heGR5bWJtOTg3ayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/esVaNp1XK3h5vVwa1x/giphy.gif',
+                        imageWidth: 150, 
+                        imageHeight: 150,
+                        title: response.message, 
+                        html: content, 
+                        showConfirmButton: true,
+                        confirmButtonText: 'OK',
+                        timer: 10000, 
+                        timerProgressBar: true
+                    }).then((result) => {
                         location.reload();
-                    }, 5000);
+                    });
                 } else {
                     toastr.error(response.message);
                 }

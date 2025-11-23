@@ -32,7 +32,7 @@ def absence(request):
 
             if len(uploaded_enc) == 0:
                 default_storage.delete(temp_path)
-                return JsonResponse({'status': 'error', 'message': 'Wajah tidak terdeteksi (Kurang Tengah)'})
+                return JsonResponse({'status': 'error', 'message': 'Wajah tidak terdeteksi (Mungkin Kurang Tengah)'})
 
             uploaded_enc = uploaded_enc[0]
 
@@ -104,10 +104,13 @@ def absence(request):
                         return JsonResponse({
                             'status': 'success',
                             'type': 'Keluar',
-                            'message': f'Absen keluar berhasil ({status_out})',
+                            'message': f'Absen keluar berhasil',
+                            'status_absen': status_out,
                             'nik': user.nik,
                             'name': user.name,
-                            'date': now.strftime('%Y-%m-%d %H:%M:%S')
+                            'date': now.strftime('%Y-%m-%d'),
+                            'time': now.strftime('%H:%M:%S'),
+                            'minor_message': 'Hati-hati di Jalan 🛵'
                         })
 
                     # =====================================================
@@ -147,10 +150,13 @@ def absence(request):
                     return JsonResponse({
                         'status': 'success',
                         'type': 'Masuk',
-                        'message': f'Absen masuk berhasil ({status_in})',
+                        'message': f'Absen masuk berhasil',
+                        'status_absen': status_in,
                         'nik': user.nik,
                         'name': user.name,
-                        'date': now.strftime('%Y-%m-%d %H:%M:%S')
+                        'date': now.strftime('%Y-%m-%d'),
+                        'time': now.strftime('%H:%M:%S'),
+                        'minor_message': 'Semangat Bekerja 💪🏼'
                     })
 
             # Jika wajah tidak ditemukan
