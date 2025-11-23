@@ -499,7 +499,7 @@ def update_jadwal(request):
                             is_there = InAbsences.objects.filter(
                                 nik=user,
                                 date_in__date=date.date(),
-                                status_in="Libur"
+                                status_in="Libur/Cuti"
                             ).exists()
 
                             print(f'{is_there}')
@@ -508,10 +508,10 @@ def update_jadwal(request):
                                 InAbsences.objects.create(
                                     nik=user,
                                     date_in=date_str,
-                                    status_in="Libur",
+                                    status_in="Libur/Cuti",
                                     schedule=shift,
                                     date_out=date_str,
-                                    status_out="Libur"
+                                    status_out="Libur/Cuti"
                                 )
                     if mapping_exists:
                         mapping.schedule_id = shift_id
@@ -550,7 +550,7 @@ def absen(request, divisi_id):
 
     list_absen = InAbsences.objects.filter(
         nik__divisi=divisi_id
-    ).select_related('nik')
+    ).select_related('nik').order_by('date_in')
 
     absensi_per_bulan = {}
 
@@ -564,8 +564,6 @@ def absen(request, divisi_id):
 
         absensi_per_bulan[bulan_key].append(absen)
 
-    absensi_per_bulan[bulan_key].append
-
     bulan_labels = {
         key: datetime.strptime(key, "%Y-%m").strftime("%B %Y")
         for key in absensi_per_bulan.keys()
@@ -575,7 +573,7 @@ def absen(request, divisi_id):
         'user': user,
         'divisi_id': divisi_id,
         'absensi_per_bulan': absensi_per_bulan,
-        'bulan_labels': bulan_labels,      
+        'bulan_labels': bulan_labels,
         'title': f'Absen Divisi {divisi_id}',
     }
 

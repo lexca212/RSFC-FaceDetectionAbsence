@@ -4,75 +4,107 @@
 {% block content %}
 <h3>{{ title }}</h3>
 
-{% for bulan_key, items in absensi_per_bulan.items %}
-<div class="card card-primary mb-5 shadow collapsed-card">
-  <div class="card-header bg-info text-white">
-    <h4 class="card-title text-2xl font-semibold">{{ bulan_labels|dict_get:bulan_key }}</h4>
-
-    <div class="card-tools">
-      <button type="button" class="btn btn-tool text-white"
-        data-card-widget="collapse">
-        <i class="fas fa-plus"></i>
-      </button>
+{% if absensi_per_bulan %}
+    
+    {% for bulan_key, items in absensi_per_bulan.items %}
+    <div class="card card-primary mb-5 shadow collapsed-card">
+        <div class="card-header bg-info text-white">
+            <h4 class="card-title text-2xl font-semibold">{{ bulan_labels|dict_get:bulan_key }}</h4>
+            <div class="card-tools">
+                <button type="button" class="btn btn-tool text-white"
+                    data-card-widget="collapse">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-bordered table-sm">
+                <thead class="bg-secondary text-white">
+                    <tr class="text-center">
+                        <th>NIK</th>
+                        <th>Nama</th>
+                        <th>Shift</th>
+                        <th>Tanggal Masuk</th>
+                        <th>Status Masuk</th>
+                        <th>Tanggal Keluar</th>
+                        <th>Status Keluar</th>
+                        <th>Keterlambatan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for absen in items %}
+                    <tr class="text-center">
+                        <td>{{ absen.nik.nik }}</td>
+                        <td class="text-left">{{ absen.nik.name }}</td>
+                        <td>
+                            {% if absen.schedule %}
+                                <div class="font-weight-bold">
+                                {{ absen.schedule.name }} 
+                                <small>( {{ absen.schedule.start_time|time:"H:i" }} )</small>
+                                </div>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ absen.date_in|date:"d M Y H:i" }}</td>
+                        <td class="
+                                {% if absen.status_in == 'Terlambat' %}
+                                    bg-danger text-white
+                                {% elif absen.status_in == 'Tepat Waktu' %}
+                                    bg-primary text-white
+                                {% elif absen.status_in == 'Libur/Cuti'%}
+                                    bg-warning text-white
+                                {% endif %}
+                            ">
+                            {{ absen.status_in }}
+                        </td>
+                        <td>
+                            {% if absen.date_out %}
+                            {{ absen.date_out|date:"d M Y H:i" }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td class="
+                                {% if absen.status_out == 'Pulang Cepat' %}
+                                    bg-danger text-white
+                                {% elif absen.status_out == 'Tepat Waktu' %}
+                                    bg-primary text-white
+                                {% elif absen.status_out == 'Libur/Cuti' %}
+                                    bg-warning text-white
+                                {% else %}
+                                {% endif %}
+                            ">
+                            {{ absen.status_out|default:"-" }}
+                        </td>
+                        <td>
+                            <!-- keterlambatan -->
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8">
+                            <div class="card shadow p-2 mt-4">
+                                <div class="card-body text-center">
+                                    <h4 class="text-xl font-bold">Tidak ada data absen bulan ini.</h4>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-  </div>
-  <div class="card-body p-0">
-    <table class="table table-bordered table-sm">
-      <thead class="bg-secondary text-white">
-        <tr>
-          <th>NIK</th>
-          <th>Nama</th>
-          <th>Jadwal Masuk</th>
-          <th>Tanggal Masuk</th>
-          <th>Status Masuk</th>
-          <th>Jadwal Keluar</th>
-          <th>Tanggal Keluar</th>
-          <th>Status Keluar</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for absen in items %}
-        <tr class="text-center">
-          <td>{{ absen.nik.nik }}</td>
-          <td  class="text-left">{{ absen.nik.name }}</td>
-          <td></td>
-          <td>{{ absen.date_in|date:"d M Y H:i" }}</td>
-          <td class="
-                {% if absen.status_in == 'Terlambat' %}
-                    bg-danger text-white
-                {% elif absen.status_in == 'Tepat Waktu' %}
-                    bg-primary text-white
-                {% elif absen.status_in == 'Libur'%}
-                    bg-warning text-white
-                {% endif %}
-            ">
-            {{ absen.status_in }}
-          </td>
-          <td></td>
-          <td>
-            {% if absen.date_out %}
-            {{ absen.date_out|date:"d M Y H:i" }}
-            {% else %}
-            -
-            {% endif %}
-          </td>
-          <td class="
-                {% if absen.status_out == 'Pulang Cepat' %}
-                    bg-danger text-white
-                {% elif absen.status_out == 'Tepat Waktu' %}
-                    bg-primary text-white
-                {% elif absen.status_out == 'Libur' %}
-                    bg-warning text-white
-                {% else %}
-                {% endif %}
-            ">
-            {{ absen.status_out|default:"-" }}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-{% endfor %}
+    {% endfor %}
+
+{% else %}
+    <div class="card shadow p-4 mt-4">
+        <div class="card-body text-center">
+            <h1 class="text-2xl font-bold text-danger">Data Absen Kosong</h1>
+            <p>Belum ada data absensi yang tercatat untuk divisi ini.</p>
+        </div>
+    </div>
+    
+{% endif %}
 {% endblock %}
