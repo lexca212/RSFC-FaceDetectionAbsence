@@ -403,7 +403,7 @@ def save_jadwal(request):
                             is_there = InAbsences.objects.filter(
                                 nik=user,
                                 date_in__date=date.date(),
-                                status_in="Libur"
+                                status_in="Libur/Cuti"
                             ).exists()
 
                             print(f'{is_there}')
@@ -412,10 +412,10 @@ def save_jadwal(request):
                                 InAbsences.objects.create(
                                     nik=user,
                                     date_in=date_str,
-                                    status_in="Libur",
+                                    status_in="Libur/Cuti",
                                     schedule=shift,
                                     date_out=date_str,
-                                    status_out="Libur"
+                                    status_out="Libur/Cuti"
                                 )
 
                     mapping, created = MappingSchedules.objects.get_or_create(
