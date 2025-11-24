@@ -600,4 +600,86 @@ def absen(request, divisi_id):
 
     return render(request, 'admin/absen/list_absen.html', context)
 
-   
+
+def cuti_master(request):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
+
+    cuti_list = MasterLeaves.objects.all()
+
+    context = {
+        'user': user,
+        'title': 'Cuti Master',
+        'cuti_list': cuti_list,
+    }
+
+    return render(request, 'admin/cuti_master/index.html', context)
+
+def addCuti(request):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
+
+    if request.method == 'POST':
+      name = request.POST['cuti_name']
+      default_quota = request.POST['jatah']
+      auto_days = request.POST['jmlh_hari']
+
+      # Create new data entry
+      cuti = MasterLeaves(
+          name=name,
+          default_quota=default_quota,
+          auto_days=auto_days,
+      )
+      cuti.save()
+
+      messages.success(request, 'Data cuti berhasil diupload.')
+      return redirect('/admins/cuti_master')
+    
+    context = {
+      'user': user,
+      'title': 'Tambah Cuti',
+    }
+    return render(request, 'admin/cuti_master/addForm.html', context)
+
+def editCuti(request, id):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
+
+    if request.method == 'POST':
+      name = request.POST['cuti_name']
+      default_quota = request.POST['jatah']
+      auto_days = request.POST['jmlh_hari']
+
+      try:
+        cuti = get_object_or_404(MasterLeaves, id=id)
+
+        cuti.name = name
+        cuti.default_quota = default_quota
+        cuti.auto_days = auto_days
+        cuti.save()
+
+        messages.success(request, 'Data cuti berhasil diupdate.')
+        return redirect('/admins/cuti_master')
+      
+      except Exception as e:
+        messages.error(request, f'Gagal mengupdate data cuti: {e}')
+        return redirect('/admins/cuti_master')
+    
+    cuti = get_object_or_404(MasterLeaves, id=id)
+
+    context = {
+      'user': user,
+      'title': 'Edit Cuti',
+      'cuti': cuti,
+    }
+    return render(request, 'admin/cuti_master/editForm.html', context)
+
+def deleteCuti(request, id):
+    try:
+      cuti = get_object_or_404(MasterLeaves, id=id)
+      cuti.delete()
+
+      messages.success(request, 'Data cuti berhasil dihapus.')
+      return redirect('/admins/cuti_master')
+    
+    except Exception as e:
+      messages.error(request, f'Gagal menghapus data cuti: {e}')
+      return redirect('/admins/cuti_master')
+

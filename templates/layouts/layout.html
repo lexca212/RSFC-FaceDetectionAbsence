@@ -88,7 +88,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
             </li>
             <li class="nav-item active">
               <a href="{% url 'absen' %}" class="nav-link">
-                <i class="nav-icon fa fa-hourglass-half"></i>
+                <i class="nav-icon fa fa-solid fa-table"></i>
                 <p>Data Absen</p>
               </a>
             </li>
@@ -133,8 +133,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 </li>
                 <li class="nav-item">
                 <a href="{% url 'jadwal_master' %}" class="nav-link">
-                <i class="fa fa-calendar nav-icon"></i>
+                <i class="fa fa-fw fa-clock nav-icon"></i>
                 <p>Master jadwal</p>
+                </a>
+                </li>
+                <li class="nav-item">
+                <a href="{% url 'cuti_master' %}" class="nav-link">
+                <i class="fa fa-fw fa-clock nav-icon"></i>
+                <p>Master Cuti</p>
                 </a>
                 </li>
             </li>

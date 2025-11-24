@@ -1,0 +1,45 @@
+{% extends 'layouts/layout.html' %}
+{% block content %}
+<div class="card card-primary">
+    <div class="card-header">
+        <h3 class="card-title">{{ title }}</h3>
+    </div>
+    <!-- /.card-header -->
+    <!-- form start -->
+    <form role="form" method="post" action="{% url 'addCuti' %}">
+        {% csrf_token %}
+        <div class="card-body">
+            <div class="form-group">
+                <label for="cuti_name">Nama Cuti</label>
+                <input type="text" class="form-control" name="cuti_name" id="cuti_name" placeholder="Nama Cuti" required>
+            </div>
+            <div class="form-group">
+                <label for="jatah">Jatah</label>
+                <input type="number" class="form-control" name="jatah" id="jatah" placeholder="Jatah" required>
+            </div>
+            <div class="form-group">
+                <label for="jmlh_hari">Jumlah Hari</label>
+                <input type="number" class="form-control" name="jmlh_hari" id="jmlh_hari" placeholder="Jumlah Hari" required>
+            </div>
+        </div>
+        <div class="card-footer">
+            <button id="submit" type="submit" class="btn btn-primary">Submit</button>
+        </div>
+    </form>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{% if messages %}
+<script>
+    {% for message in messages %}
+    Swal.fire({
+        icon: "{{ message.tags }}",  
+        title: "{{ message.tags|capfirst }}",
+        text: "{{ message }}",
+        showConfirmButton: false,
+        timer: 3000
+    });
+    {% endfor %}
+</script>
+{% endif %}
+{% endblock %}

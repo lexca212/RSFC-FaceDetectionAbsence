@@ -27,5 +27,10 @@ urlpatterns = [
     path('absen/', index_absen, name='absen'),
     path('absen/<str:divisi_id>', absen, name='absen'),
 
+    path('cuti_master/', cuti_master, name='cuti_master'),
+    path('addCuti/', addCuti, name='addCuti'),
+    path('editCuti/<str:id>', editCuti, name='editCuti'),
+    path('deleteCuti/<str:id>', deleteCuti, name='deleteCuti'),
+
     path('err403/', err403, name='err403')
 ]
