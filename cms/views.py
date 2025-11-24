@@ -259,8 +259,12 @@ def addUser(request):
     if request.method == 'POST':
       nik = request.POST['nik']
       name = request.POST['name']
+      email = request.POST['email']
+      password = request.POST['password']
       divisi = request.POST['divisi']
       photo_data = request.POST.get('photo', '')
+
+      hash_password = make_password(password)
 
       if photo_data:
         try:
@@ -269,10 +273,11 @@ def addUser(request):
           ext = format.split('/')[-1]
           data = ContentFile(base64.b64decode(imgstr), name=f'{nik}.{ext}')
 
-          # Create new data entry
           user = Users(
               nik=nik,
               name=name,
+              email=email,
+              password=hash_password,
               divisi=divisi,
               photo=data,
           )

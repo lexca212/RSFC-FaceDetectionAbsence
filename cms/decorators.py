@@ -24,7 +24,7 @@ def superadmin_required(view_func):
 
 def admin_required(view_func):
     def wrapper(request, *args, **kwargs):
-        if request.session.get('is_admin') != 1:
+        if request.session.get('is_admin') == 0:
             messages.error(request, "Anda tidak memiliki akses ke halaman ini.")
             return redirect('/admins/err403')
         return view_func(request, *args, **kwargs)
