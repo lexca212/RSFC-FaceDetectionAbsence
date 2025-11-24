@@ -18,7 +18,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
   </style>
   <link rel="shortcut icon" href="{% static '/assets/images/rsfc_logo.png' %}"/>
 
-  <link rel="stylesheet" href="/static/assets/dist/css/main.css">
+  <link rel="stylesheet" href="{% static 'assets/dist/css/main.css' %}">
 
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
@@ -86,6 +86,13 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 <p>Dashboard</p>
               </a>
             </li>
+          </ul>
+        </nav>
+
+        <hr style="background-color:dimgray">
+        
+        <nav class="mt-2">
+          <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
             <li class="nav-item active">
               <a href="{% url 'absen' %}" class="nav-link">
                 <i class="nav-icon fa fa-solid fa-table"></i>
@@ -104,19 +111,13 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 <p>Tambah Data Karyawan</p>
               </a>
             </li>
-            {% comment %} <li class="nav-item active">
-              <a href="" class="nav-link">
-                <i class="nav-icon fas fa-book"></i>
-                <p>Mata Pelajaran
-                </p>
-              </a>
-            </li>
-            <li class="nav-item active">
-              <a href="" class="nav-link">
-                <i class="nav-icon fas fa-school"></i>
-                <p>Kelas</p>
-              </a>
-            </li> {% endcomment %}
+          </ul>
+        </nav>
+        
+        <hr style="background-color:dimgray">
+
+         <nav class="mt-2">
+          <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
             <li class="nav-item active">
               <a href="#" class="nav-link">
                 <i class="nav-icon fa fa-database"></i>
@@ -126,23 +127,39 @@ scratch. This page gets rid of all links and provides the needed markup only.
               </a>
               <ul class="nav nav-treeview">
                 <li class="nav-item">
-                <a href="{% url 'divisi_master' %}" class="nav-link">
-                <i class="fa fa-sitemap nav-icon"></i>
-                <p>Master Divisi</p>
-                </a>
+                  <a href="{% url 'divisi_master' %}" class="nav-link">
+                    <i class="fa fa-sitemap nav-icon"></i>
+                    <p>Master Divisi</p>
+                  </a>
                 </li>
                 <li class="nav-item">
-                <a href="{% url 'jadwal_master' %}" class="nav-link">
-                <i class="fa fa-fw fa-clock nav-icon"></i>
-                <p>Master jadwal</p>
-                </a>
+                  <a href="{% url 'jadwal_master' %}" class="nav-link">
+                    <i class="fa fa-fw fa-clock nav-icon"></i>
+                    <p>Master jadwal</p>
+                  </a>
                 </li>
                 <li class="nav-item">
-                <a href="{% url 'cuti_master' %}" class="nav-link">
-                <i class="fa fa-fw fa-clock nav-icon"></i>
-                <p>Master Cuti</p>
-                </a>
+                  <a href="{% url 'cuti_master' %}" class="nav-link">
+                    <i class="fa fa-calendar-times nav-icon"></i>
+                    <p>Master Cuti</p>
+                  </a>
                 </li>
+            </li>
+          </ul>
+        </nav>
+
+        <hr style="background-color:dimgray">
+
+        <nav class="mt-2">
+          <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+            <li class="nav-header">Data Saya</li>
+            <li class="nav-item">
+              <a href="{% url 'pengajuan_cuti' %}" class="nav-link ">
+                <i class="nav-icon fas fa-user-times"></i>
+                <p>
+                    Pengajuan Cuti
+                </p>
+              </a>
             </li>
           </ul>
         </nav>

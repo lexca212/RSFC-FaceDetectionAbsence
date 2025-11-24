@@ -649,7 +649,6 @@ def addCuti(request):
       default_quota = request.POST['jatah']
       auto_days = request.POST['jmlh_hari']
 
-      # Create new data entry
       cuti = MasterLeaves(
           name=name,
           default_quota=default_quota,
@@ -716,3 +715,49 @@ def deleteCuti(request, id):
       messages.error(request, f'Gagal menghapus data cuti: {e}')
       return redirect('/admins/cuti_master')
 
+def pengajuan_cuti(request):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
+
+    cuti_list = MasterLeaves.objects.all()
+
+    pengajuan_list = LeaveRequests.objects.filter(
+        nik_id = user.nik
+    )
+
+    if request.method == 'POST':
+        leave_type_id = request.POST['cuti']
+        leave_type_obj = get_object_or_404(MasterLeaves, id=leave_type_id)
+        photo_file = request.FILES.get('photo') 
+        start_date = request.POST['start_date']
+        end_date = request.POST['end_date']
+        reason = request.POST['reason']
+
+        try:
+            new_leave_request = LeaveRequests(
+                nik=user,
+                leave_type=leave_type_obj,
+                start_date=start_date,
+                end_date=end_date,
+                reason=reason,
+            )
+            
+            if photo_file:
+                new_leave_request.photo = photo_file 
+            
+            new_leave_request.save()
+
+            messages.success(request, 'Data pengajuan cuti berhasil diupload.')
+            return redirect('pengajuan_cuti') 
+            
+        except Exception as e:
+            messages.error(request, f'Gagal mengupload data pengajuan cuti. Error: {e}')
+            return redirect('pengajuan_cuti')
+            
+    context = {
+       'user': user,
+       'cuti_list':cuti_list,
+       'pengajuan_list': pengajuan_list,
+       'title': 'Pengajuan Cuti'
+    }
+
+    return render(request, 'admin/cuti/index.html', context)

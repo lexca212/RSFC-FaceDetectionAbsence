@@ -32,5 +32,7 @@ urlpatterns = [
     path('editCuti/<str:id>', editCuti, name='editCuti'),
     path('deleteCuti/<str:id>', deleteCuti, name='deleteCuti'),
 
+    path('pengajuan_cuti/', pengajuan_cuti, name='pengajuan_cuti'),
+
     path('err403/', err403, name='err403')
 ]

@@ -35,6 +35,8 @@ class LeaveRequests(models.Model):
     id = models.AutoField(primary_key=True)
     nik = models.ForeignKey('app.Users', on_delete=models.CASCADE)
     leave_type = models.ForeignKey(MasterLeaves, on_delete=models.CASCADE)
+    photo = models.ImageField(upload_to='static/cuti_img', null=True, blank=True)
+    note = models.TextField(blank=True, null=True)
     start_date = models.DateField()
     end_date = models.DateField()
     reason = models.TextField(blank=True, null=True)
