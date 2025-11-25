@@ -1,0 +1,79 @@
+{% extends 'layouts/layout.html' %}
+{% load static %}
+{% block content %}
+<div class="modal-content mb-5">
+
+  <div class="modal-header bg-primary">
+    <h4 class="modal-title text-white">Edit Pengajuan Cuti</h4>
+    <button type="button" class="close" data-dismiss="modal">
+      <span>&times;</span>
+    </button>
+  </div>
+
+  <form method="POST" action="{% url 'edit_pengajuan_cuti' pengajuan.id %}" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    {{ pengajuan_list.leave_type_id.id }}
+
+    <input type='text' name="nik_id" id="nik_id" value="{{ user.nik }}" hidden>
+    <div class="modal-body">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>Jenis Cuti</label>
+            <select class="form-control" name="cuti" required>
+              <option value="" selected disabled>-- Pilih Cuti --</option>
+              {% for cuti in cuti_list %}
+                <option value="{{ cuti.id }}"
+                    {% if cuti.id == pengajuan.leave_type_id %} 
+                        selected
+                    {% endif %}
+                >
+                    {{ cuti.name }}
+                </option> 
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>Foto Pendukung</label>
+            <input type="file" class="form-control mb-2" id="photo" name="photo" accept="image/*"> 
+            <a href="{{ pengajuan.photo.url }}" class="ml-2"><img src="{{ pengajuan.photo.url }}" style="width:150px" alt="Surat Pengajuan Cuti"></a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>Tanggal Mulai</label>
+            <input value="{{ pengajuan.start_date|date:'Y-m-d' }}" type="date" class="form-control" id="start_date" name="start_date" required>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>Tanggal Selesai</label>
+            <input value="{{ pengajuan.end_date|date:'Y-m-d' }}" type="date" class="form-control" id="end_date" name="end_date" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Alasan</label>
+        <textarea class='form-control' id='reason' name='reason' rows="3">{{ pengajuan.reason }}</textarea>
+      </div>
+
+    </div>
+
+    <div class="modal-footer justify-content-between">
+      <a href="{% url 'pengajuan_cuti' %}" type="button" class="btn btn-danger" ><i class="fa fa-times"></i> Batal</a>
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </div>
+
+  </form>
+
+</div>
+{% endblock %}

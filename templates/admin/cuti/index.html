@@ -15,8 +15,8 @@
           <table class="table table-striped" id="tableprint" width="100%" cellspacing="0">
             <thead>
               <tr class='text-center'>
-                <th class='col-2'>Nama Cuti</th>
-                <th class='col-1'>Tanggal</th>
+                <th class='col-1'>Nama Cuti</th>
+                <th class='col-2'>Tanggal</th>
                 <th class='col-2'>Alasan Cuti</th>
                 <th class='col-2'>Foto Cuti</th>
                 <th class='col-1'>Status Cuti</th>
@@ -29,8 +29,8 @@
               {% for pengajuan in pengajuan_list %}
               <tr class="text-center">
                 <td>{{ pengajuan.leave_type.name }}</td>
-                <td>{{ pengajuan.start_date }}</td>
-                <td>{{ pengajuan.reason }}</td>
+                <td>{{ pengajuan.start_date }} s.d. {{ pengajuan.end_date }}</td>
+                <td class="text-left">{{ pengajuan.reason }}</td>
                 <td>
                   <img src="{{ pengajuan.photo.url }}" style="width:150px" alt="Surat Pengajuan Cuti">
                 </td>
@@ -47,8 +47,8 @@
                 </td>
                 <td>{{ pengajuan.note }}</td>
                 <td>
-                  <button class="btn btn-sm btn-warning my-1">Edit</button> |
-                  <button class="btn btn-sm btn-danger my-1">Batal</button>
+                  <a href="{% url 'edit_pengajuan_cuti' pengajuan.id %}" class="btn btn-sm btn-warning my-1"><i class="fa fa-edit"></i> Edit</a> |
+                  <a href="javascript:void(0);" class="btn btn-sm btn-danger my-1 btn-hapus" data-url="{% url 'delete_pengajuan_cuti' pengajuan.id %}"><i class="fa fa-times"></i> Batal</a>
                 </td>
               </tr>
               {% endfor %}
@@ -155,4 +155,30 @@
     {% endfor %}
 </script>
 {% endif %}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).on('click', '.btn-hapus', function(e){
+    e.preventDefault(); // cegah langsung menuju link
+
+    var url = $(this).attr("data-url");
+
+    Swal.fire({
+        title: 'Yakin ingin menghapus data ini?',
+        text: "Data yang sudah dihapus tidak bisa dikembalikan!",
+        icon: 'warning',
+        showCancelButton: true,
+        cancelButtonColor: '#E0A800',
+        confirmButtonColor: '#d33',
+        cancelButtonText: 'Batal',
+        confirmButtonText: 'Ya, hapus!',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Redirect manual ke URL penghapusan
+            window.location.href = url;
+        }
+    });
+});
+</script>
 {% endblock %}
