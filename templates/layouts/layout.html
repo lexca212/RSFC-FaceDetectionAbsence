@@ -18,7 +18,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
   </style>
   <link rel="shortcut icon" href="{% static '/assets/images/rsfc_logo.png' %}"/>
 
-  <link rel="stylesheet" href="{% static 'assets/dist/css/main.css' %}">
+  <link rel="stylesheet" href="/static/assets/dist/css/adminlte.min.css">
 
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
@@ -28,6 +28,9 @@ scratch. This page gets rid of all links and provides the needed markup only.
   <link rel="stylesheet" href="{% static 'assets/dist/css/adminlte.min.css' %}">
   <link rel="stylesheet" href="{% static 'assets/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}">
   <link rel="stylesheet" href="{% static 'assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}">
+  {% comment %} <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/css/adminlte.min.css">
+     {% endcomment %}
 </head>
 
 <body class="hold-transition layout-fixed sidebar-mini fixed layout-navbar-fixed sidebar-closed sidebar-collapse">
@@ -68,7 +71,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
         <!-- Sidebar user panel (optional) -->
         <div class="user-panel mt-3 pb-3 mb-3 d-flex ">
           <div class="image">
-            <img src="/static/assets/dist/img/AdminLTELogo.png" class="img-circle elevation-2" alt="User Image">
+            <img src="{{ user.photo.url }}" class="brand-image img-circle elevation-3" style="opacity: .8; width:35px; height: 35px" alt="User Image">
           </div>
           <div class="info">
             <a class="d-block">{{ user.name }}</a>
@@ -106,6 +109,12 @@ scratch. This page gets rid of all links and provides the needed markup only.
               </a>
             </li>
             <li class="nav-item active">
+              <a href="{% url 'persetujuan_cuti' %}" class="nav-link">
+                <i class="nav-icon fa fa-gavel"></i>
+                <p>Persetujuan Cuti</p>
+              </a>
+            </li>
+            <li class="nav-item active">
               <a href="{% url 'addUser' %}" class="nav-link">
                 <i class="nav-icon fas fa-user-plus"></i>
                 <p>Tambah Data Karyawan</p>
@@ -116,9 +125,27 @@ scratch. This page gets rid of all links and provides the needed markup only.
         
         <hr style="background-color:dimgray">
 
-         <nav class="mt-2">
+        
+
+        <nav class="mt-2">
           <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-            <li class="nav-item active">
+            <li class="nav-header">Data Saya</li>
+            <li class="nav-item">
+              <a href="{% url 'pengajuan_cuti' %}" class="nav-link ">
+                <i class="nav-icon fas fa-user-times"></i>
+                <p>
+                    Pengajuan Cuti
+                </p>
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <hr style="background-color:dimgray">
+
+        <nav class="mt-2">
+          <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+            <li class="nav-item">
               <a href="#" class="nav-link">
                 <i class="nav-icon fa fa-database"></i>
                 <p>Master Data
@@ -144,25 +171,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
                     <p>Master Cuti</p>
                   </a>
                 </li>
+              </ul>
             </li>
           </ul>
         </nav>
 
-        <hr style="background-color:dimgray">
-
-        <nav class="mt-2">
-          <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-            <li class="nav-header">Data Saya</li>
-            <li class="nav-item">
-              <a href="{% url 'pengajuan_cuti' %}" class="nav-link ">
-                <i class="nav-icon fas fa-user-times"></i>
-                <p>
-                    Pengajuan Cuti
-                </p>
-              </a>
-            </li>
-          </ul>
-        </nav>
 
         <!-- /.sidebar-menu -->
       </div>
@@ -207,7 +220,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
     <!-- /.control-sidebar -->
 
     <!-- Main Footer -->
-    <footer class="main-footer fixed-bottom" style="text-align: center;">
+    <footer class="main-footer" style="text-align: center;">
       <!-- To the right -->
       {% comment %} <div class="float-right d-none d-sm-inline">
         <a href="https://www.instagram.com/rsfitricandra/">@rsfitricandra</a> 
@@ -224,9 +237,13 @@ scratch. This page gets rid of all links and provides the needed markup only.
   <!-- jQuery -->
   <script src="{% static 'assets/plugins/jquery/jquery.min.js' %}"></script>
   <!-- Bootstrap 4 -->
-  <script src="{% static 'asstes/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'assets/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
   <!-- AdminLTE App -->
   <script src="{% static 'assets/dist/js/adminlte.min.js' %}"></script>
+
+  {% comment %} <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/js/adminlte.min.js"></script> {% endcomment %}
 
   <script>
     $(document).ready(function () {
@@ -236,7 +253,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
         // Menambahkan kelas "active" ke elemen "li" yang sesuai dengan path
         $('#sidebar-menu a[href="' + current_path + '"]').parents('li').addClass('active');
     });
-</script>
+  </script>
 </body>
 
 </html>

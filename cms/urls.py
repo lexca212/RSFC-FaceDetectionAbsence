@@ -36,5 +36,8 @@ urlpatterns = [
     path('edit_pengajuan_cuti/<int:id>', edit_pengajuan_cuti, name='edit_pengajuan_cuti'),
     path('delete_pengajuan_cuti/<int:id>', delete_pengajuan_cuti, name='delete_pengajuan_cuti'),
 
+    path('persetujuan_cuti/', persetujuan_cuti, name='persetujuan_cuti'),
+    path('detail_pengajuan/<int:id>', detail_pengajuan, name='detail_pengajuan'),
+
     path('err403/', err403, name='err403')
 ]

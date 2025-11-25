@@ -1,0 +1,108 @@
+{% extends 'layouts/layout.html' %}
+{% load static %}
+{% block content %}
+<section class="content">
+  <div class="container-fluid">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h1 class="h3 mb-2 text-gray-800">List Pengajuan Cuti</h1> <br>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-striped" id="tableprint" width="100%" cellspacing="0">
+            <thead>
+              <tr class='text-center'>
+                <th>NIK</th>
+                <th>Nama</th>
+                <th>Jenis Cuti</th>
+                <th>Tanggal</th>
+                <th>Status Cuti</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if pengajuan_list %}
+              {% for pengajuan in pengajuan_list %}
+              <tr class="text-center">
+                <td>{{ pengajuan.nik.nik }}</td>
+                <td>{{ pengajuan.nik.name }}</td>
+                <td>{{ pengajuan.leave_type.name }}</td>
+                <td>{{ pengajuan.start_date }} s.d. {{ pengajuan.end_date }}</td>
+                <td>
+                  {% if pengajuan.status == 'approved' %}
+                    <span class="badge badge-primary"  style="font-size: 18px;">{{ pengajuan.status }}</span>
+                  {% elif pengajuan.status == 'rejected' %}
+                    <span class="badge badge-danger"  style="font-size: 18px;">{{ pengajuan.status }}</span>
+                  {% elif pengajuan.status == 'pending' %}
+                    <span class="badge badge-warning text-white" style="font-size: 18px;">{{ pengajuan.status }}</span>
+                  {% else %}
+                    <span class="badge badge-secondary"  style="font-size: 18px;">{{ pengajuan.status }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if pengajuan.status == 'approved' %}
+                  <span class="badge badge-info"  style="font-size: 18px;">{{ pengajuan.status }}</span>
+                  {% else %}
+                  <a href="{% url 'detail_pengajuan' pengajuan.id %}" class="btn btn-sm btn-info my-1"><i class="fa fa-search-plus"></i> Detail</a> 
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+              {% else %}
+                <td colspan="5" class="text-center">Belum ada pengajuan cuti</td>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <br>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{% static 'assets/plugins/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'assets/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'assets/dist/js/adminlte.min.js' %}"></script>
+
+
+{% if messages %}
+<script>
+    {% for message in messages %}
+    Swal.fire({
+        icon: "{{ message.tags }}",  
+        title: "{{ message.tags|capfirst }}",
+        text: "{{ message }}",
+        showConfirmButton: false,
+        timer: 3000
+    });
+    {% endfor %}
+</script>
+{% endif %}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).on('click', '.btn-hapus', function(e){
+    e.preventDefault(); // cegah langsung menuju link
+
+    var url = $(this).attr("data-url");
+
+    Swal.fire({
+        title: 'Yakin ingin menghapus data ini?',
+        text: "Data yang sudah dihapus tidak bisa dikembalikan!",
+        icon: 'warning',
+        showCancelButton: true,
+        cancelButtonColor: '#E0A800',
+        confirmButtonColor: '#d33',
+        cancelButtonText: 'Batal',
+        confirmButtonText: 'Ya, hapus!',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Redirect manual ke URL penghapusan
+            window.location.href = url;
+        }
+    });
+});
+</script>
+{% endblock %}

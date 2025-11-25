@@ -822,10 +822,103 @@ def delete_pengajuan_cuti(request, id):
       messages.error(request, f'Gagal menghapus data pengajuan cuti: {e}')
       return redirect('/admins/pengajuan_cuti')
 
+def persetujuan_cuti(request):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
 
+    pengajuan_list = LeaveRequests.objects.all()
 
+    context = {
+       'user': user,
+       'pengajuan_list': pengajuan_list,
+       'title': 'List Pengajuan Cuti Karyawan'
+    }
 
+    return render(request, 'admin/cuti_persetujuan/index.html', context)
 
+def detail_pengajuan(request, id):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
+
+    pengajuan = get_object_or_404(LeaveRequests, id=id)
+
+    if request.method == 'POST':
+        start_date = request.POST['start_date']
+        end_date = request.POST['end_date']
+        status = request.POST['status']
+        note = request.POST['note']
+
+        try:
+            pengajuan = get_object_or_404(LeaveRequests, id=id)
+
+            pengajuan.start_date = start_date
+            pengajuan.end_date = end_date
+            pengajuan.status = status
+            pengajuan.note = note
+
+            pengajuan.save()
+
+            if status == "approved":
+                from datetime import datetime, timedelta
+                start = datetime.strptime(start_date, "%Y-%m-%d").date()
+                end = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+                cuti_schedule, created = MasterSchedules.objects.get_or_create(
+                    id="CUTI",
+                    defaults={
+                        "name": "Cuti",
+                        "start_time": "00:00",
+                        "end_time": "23:59",
+                    }
+                )
+
+                current = start
+                while current <= end:
+
+                    sudah_ada_absen = InAbsences.objects.filter(
+                        nik=pengajuan.nik,
+                        date_in__date=current,
+                        status_in="cuti"
+                    ).exists()
+
+                    if not sudah_ada_absen:
+                        InAbsences.objects.create(
+                            nik=pengajuan.nik,
+                            date_in=datetime.combine(current, datetime.min.time()),
+                            status_in="cuti",
+                            date_out=datetime.combine(current, datetime.max.time()),
+                            status_out="cuti",
+                            schedule=cuti_schedule
+                        )
+
+                    sudah_ada_schedule = MappingSchedules.objects.filter(
+                        nik=pengajuan.nik,
+                        date=current
+                    ).exists()
+
+                    if not sudah_ada_schedule:
+                        MappingSchedules.objects.create(
+                            id=f"{pengajuan.nik.nik}_{current}",
+                            nik=pengajuan.nik,
+                            schedule=cuti_schedule,
+                            date=current
+                        )
+
+                    current += timedelta(days=1)
+
+            messages.success(request, 'Data persetujuan cuti berhasil disimpan.')
+            return redirect('persetujuan_cuti') 
+            
+        except Exception as e:
+            messages.error(request, f'Gagal menyimpan data persetujuan pengajuan cuti. Error: {e}')
+            return redirect('persetujuan_cuti')
+
+    context = {
+       'user': user,
+       'pengajuan': pengajuan,
+       'title': 'Detail Pengajuan Cuti Karyawan',
+       'status': ['pending', 'approved', 'rejected']
+    }
+
+    return render(request, 'admin/cuti_persetujuan/detail.html', context)
 
 
 

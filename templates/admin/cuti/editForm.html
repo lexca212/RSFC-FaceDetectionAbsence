@@ -13,8 +13,6 @@
   <form method="POST" action="{% url 'edit_pengajuan_cuti' pengajuan.id %}" enctype="multipart/form-data">
     {% csrf_token %}
 
-    {{ pengajuan_list.leave_type_id.id }}
-
     <input type='text' name="nik_id" id="nik_id" value="{{ user.nik }}" hidden>
     <div class="modal-body">
       <div class="row">

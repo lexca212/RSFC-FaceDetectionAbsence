@@ -47,8 +47,12 @@
                 </td>
                 <td>{{ pengajuan.note }}</td>
                 <td>
+                {% if pengajuan.status == 'pending' %}
                   <a href="{% url 'edit_pengajuan_cuti' pengajuan.id %}" class="btn btn-sm btn-warning my-1"><i class="fa fa-edit"></i> Edit</a> |
                   <a href="javascript:void(0);" class="btn btn-sm btn-danger my-1 btn-hapus" data-url="{% url 'delete_pengajuan_cuti' pengajuan.id %}"><i class="fa fa-times"></i> Batal</a>
+                {% else %}
+                  <span class="badge badge-info"  style="font-size: 18px;">{{ pengajuan.status }}</span>
+                {% endif %}
                 </td>
               </tr>
               {% endfor %}
