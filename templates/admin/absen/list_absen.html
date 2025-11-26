@@ -19,7 +19,7 @@
         </div>
         <div class="card-body p-0">
             <table class="table table-bordered table-sm">
-                <thead class="bg-secondary text-white">
+                <thead class="bg-black text-white">
                     <tr class="text-center">
                         <th>NIK</th>
                         <th>Nama</th>
@@ -52,7 +52,9 @@
                                     bg-danger text-white
                                 {% elif absen.status_in == 'Tepat Waktu' %}
                                     bg-primary text-white
-                                {% elif absen.status_in == 'Libur/Cuti'%}
+                                {% elif absen.status_in == 'Libur'%}
+                                    bg-secondary text-white
+                                {% elif absen.status_in == 'Cuti'%}
                                     bg-warning text-white
                                 {% endif %}
                             ">
@@ -66,11 +68,13 @@
                             {% endif %}
                         </td>
                         <td class="
-                                {% if absen.status_out == 'Pulang Cepat' %}
+                                {% if absen.status_out == 'Terlambat' %}
                                     bg-danger text-white
                                 {% elif absen.status_out == 'Tepat Waktu' %}
                                     bg-primary text-white
-                                {% elif absen.status_out == 'Libur/Cuti' %}
+                                {% elif absen.status_out == 'Libur'%}
+                                    bg-secondary text-white
+                                {% elif absen.status_out == 'Cuti'%}
                                     bg-warning text-white
                                 {% else %}
                                 {% endif %}

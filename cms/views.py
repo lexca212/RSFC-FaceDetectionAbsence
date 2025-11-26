@@ -374,7 +374,7 @@ def buat_jadwal(request):
     _, jumlah_hari = calendar.monthrange(tahun, bulan)
     tanggal_list = list(range(1, jumlah_hari + 1))
 
-    schedules = MasterSchedules.objects.all()
+    schedules = MasterSchedules.objects.exclude(id='CUTI').all()
 
     users = Users.objects.filter(divisi=divisi)
 
@@ -531,27 +531,24 @@ def update_jadwal(request):
 
 
                 if shift_id:
-                    if shift:
-                        if shift.name == 'Libur':
-                            from datetime import datetime
-                            date = datetime.strptime(date_str, "%Y-%m-%d")
-                            is_there = InAbsences.objects.filter(
+                    if shift and shift.name == 'Libur':
+                        from datetime import datetime
+                        date = datetime.strptime(date_str, "%Y-%m-%d")
+                        is_there = InAbsences.objects.filter(
+                            nik=user,
+                            date_in__date=date.date(),
+                            status_in="Libur"
+                        ).exists()
+
+                        if not is_there:
+                            InAbsences.objects.create(
                                 nik=user,
-                                date_in__date=date.date(),
-                                status_in="Libur/Cuti"
-                            ).exists()
-
-                            print(f'{is_there}')
-
-                            if not is_there:
-                                InAbsences.objects.create(
-                                    nik=user,
-                                    date_in=date_str,
-                                    status_in="Libur/Cuti",
-                                    schedule=shift,
-                                    date_out=date_str,
-                                    status_out="Libur/Cuti"
-                                )
+                                date_in=date_str,
+                                status_in="Libur",
+                                schedule=shift,
+                                date_out=date_str,
+                                status_out="Libur"
+                            )
                     if mapping_exists:
                         mapping.schedule_id = shift_id
                         mapping.save()
@@ -718,12 +715,6 @@ def deleteCuti(request, id):
 def pengajuan_cuti(request):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
-    cuti_list = MasterLeaves.objects.all()
-
-    pengajuan_list = LeaveRequests.objects.filter(
-        nik_id = user.nik
-    )
-
     if request.method == 'POST':
         leave_type_id = request.POST['cuti']
         leave_type_obj = get_object_or_404(MasterLeaves, id=leave_type_id)
@@ -752,6 +743,12 @@ def pengajuan_cuti(request):
         except Exception as e:
             messages.error(request, f'Gagal mengupload data pengajuan cuti. Error: {e}')
             return redirect('pengajuan_cuti')
+
+    cuti_list = MasterLeaves.objects.all()
+
+    pengajuan_list = LeaveRequests.objects.filter(
+        nik_id = user.nik
+    )
             
     context = {
        'user': user,
@@ -822,6 +819,8 @@ def delete_pengajuan_cuti(request, id):
       messages.error(request, f'Gagal menghapus data pengajuan cuti: {e}')
       return redirect('/admins/pengajuan_cuti')
 
+@login_auth
+@superadmin_required
 def persetujuan_cuti(request):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
@@ -835,6 +834,8 @@ def persetujuan_cuti(request):
 
     return render(request, 'admin/cuti_persetujuan/index.html', context)
 
+@login_auth
+@superadmin_required
 def detail_pengajuan(request, id):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
@@ -876,16 +877,16 @@ def detail_pengajuan(request, id):
                     sudah_ada_absen = InAbsences.objects.filter(
                         nik=pengajuan.nik,
                         date_in__date=current,
-                        status_in="cuti"
+                        status_in="Cuti"
                     ).exists()
 
                     if not sudah_ada_absen:
                         InAbsences.objects.create(
                             nik=pengajuan.nik,
                             date_in=datetime.combine(current, datetime.min.time()),
-                            status_in="cuti",
+                            status_in="Cuti",
                             date_out=datetime.combine(current, datetime.max.time()),
-                            status_out="cuti",
+                            status_out="Cuti",
                             schedule=cuti_schedule
                         )
 

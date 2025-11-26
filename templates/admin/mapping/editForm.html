@@ -80,22 +80,32 @@
 
                         {% for tgl in tanggal_list %}
                         <td class="col-tanggal">
+                            {% with selected_value=jadwal_lama|dict_get:user.nik|dict_get:tgl %}
                             <select 
                                 class="form-control form-control-sm"
                                 name="shift_{{ user.nik }}_{{ tgl }}"
                             >
-                                <option value="" selected disabled>-</option>
+                                <option value="" disabled selected>-</option>
 
                                 {% for schedule in schedules %}
-                                    <option value="{{ schedule.id }}"
-                                        {% if jadwal_lama|dict_get:user.nik|dict_get:tgl == schedule.id %}
-                                            selected
+                                    {% if selected_value == "CUTI" %}
+                                        {% if schedule.id == "CUTI" %}
+                                            <option value="CUTI" selected>CUTI</option>
                                         {% endif %}
-                                    >
-                                        {{ schedule.name }}
-                                    </option> 
+
+                                    {% else %}
+                                        {% if schedule.id != "CUTI" %}
+                                            <option value="{{ schedule.id }}"
+                                                {% if selected_value == schedule.id %}selected{% endif %}
+                                            >
+                                                {{ schedule.name }}
+                                            </option>
+                                        {% endif %}
+                                    {% endif %}
+
                                 {% endfor %}
                             </select>
+                            {% endwith %}
                         </td>
                         {% endfor %}
                     </tr>
