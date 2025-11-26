@@ -824,11 +824,14 @@ def delete_pengajuan_cuti(request, id):
 def persetujuan_cuti(request):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
-    pengajuan_list = LeaveRequests.objects.all()
+    pengajuan_list = LeaveRequests.objects.filter(status='pending')
+
+    approve_list = LeaveRequests.objects.exclude(status='pending')
 
     context = {
        'user': user,
        'pengajuan_list': pengajuan_list,
+       'approval_list': approve_list,
        'title': 'List Pengajuan Cuti Karyawan'
     }
 

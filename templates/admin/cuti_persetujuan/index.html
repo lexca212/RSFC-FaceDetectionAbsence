@@ -3,9 +3,15 @@
 {% block content %}
 <section class="content">
   <div class="container-fluid">
-    <div class="card shadow mb-4">
+    <div class="card mb-5 shadow ">
       <div class="card-header py-3">
-        <h1 class="h3 mb-2 text-gray-800">List Pengajuan Cuti</h1> <br>
+        <h1 class="card-title mb-2 text-gray-800">List Pengajuan Cuti</h1>
+        <div class="card-tools">
+            <button type="button" class="btn btn-tool text-primary mr-2"
+                data-card-widget="collapse">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
       </div>
       <div class="card-body">
         <div class="table-responsive">
@@ -49,7 +55,67 @@
               </tr>
               {% endfor %}
               {% else %}
-                <td colspan="5" class="text-center">Belum ada pengajuan cuti</td>
+                <td colspan="6" class="text-center">Belum ada pengajuan cuti</td>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-5 shadow collapsed-card">
+      <div class="card-header py-3">
+        <h1 class="card-title mb-2 text-gray-800">Approval Pengajuan Cuti</h1>
+        <div class="card-tools">
+            <button type="button" class="btn btn-tool text-primary mr-2"
+                data-card-widget="collapse">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-striped" id="tableprint" width="100%" cellspacing="0">
+            <thead>
+              <tr class='text-center'>
+                <th>NIK</th>
+                <th>Nama</th>
+                <th>Jenis Cuti</th>
+                <th>Tanggal</th>
+                <th>Status Cuti</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if approval_list %}
+              {% for pengajuan in approval_list %}
+              <tr class="text-center">
+                <td>{{ pengajuan.nik.nik }}</td>
+                <td>{{ pengajuan.nik.name }}</td>
+                <td>{{ pengajuan.leave_type.name }}</td>
+                <td>{{ pengajuan.start_date }} s.d. {{ pengajuan.end_date }}</td>
+                <td>
+                  {% if pengajuan.status == 'approved' %}
+                    <span class="badge badge-primary"  style="font-size: 18px;">{{ pengajuan.status }}</span>
+                  {% elif pengajuan.status == 'rejected' %}
+                    <span class="badge badge-danger"  style="font-size: 18px;">{{ pengajuan.status }}</span>
+                  {% elif pengajuan.status == 'pending' %}
+                    <span class="badge badge-warning text-white" style="font-size: 18px;">{{ pengajuan.status }}</span>
+                  {% else %}
+                    <span class="badge badge-secondary"  style="font-size: 18px;">{{ pengajuan.status }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if pengajuan.status == 'approved' %}
+                  <span class="badge badge-info"  style="font-size: 18px;">{{ pengajuan.status }}</span>
+                  {% else %}
+                  <a href="{% url 'detail_pengajuan' pengajuan.id %}" class="btn btn-sm btn-info my-1"><i class="fa fa-search-plus"></i> Detail</a> 
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+              {% else %}
+                <td colspan="6" class="text-center">Belum ada pengajuan cuti</td>
               {% endif %}
             </tbody>
           </table>
