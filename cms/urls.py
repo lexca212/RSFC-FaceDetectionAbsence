@@ -32,10 +32,6 @@ urlpatterns = [
     path('editCuti/<str:id>', editCuti, name='editCuti'),
     path('deleteCuti/<str:id>', deleteCuti, name='deleteCuti'),
 
-    path('pengajuan_cuti/', pengajuan_cuti, name='pengajuan_cuti'),
-    path('edit_pengajuan_cuti/<int:id>', edit_pengajuan_cuti, name='edit_pengajuan_cuti'),
-    path('delete_pengajuan_cuti/<int:id>', delete_pengajuan_cuti, name='delete_pengajuan_cuti'),
-
     path('persetujuan_cuti/', persetujuan_cuti, name='persetujuan_cuti'),
     path('detail_pengajuan/<int:id>', detail_pengajuan, name='detail_pengajuan'),
 

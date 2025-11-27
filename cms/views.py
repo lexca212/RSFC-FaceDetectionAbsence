@@ -29,6 +29,8 @@ def login(request):
                 return redirect('/admins/dashboard')
               elif user.is_admin == 1:
                 return redirect('/admins/mapping_jadwal')
+              else:
+                 return redirect('/users/jadwal')
                   
         except Admins.DoesNotExist:
             messages.error(request, 'Invalid email or password')
@@ -712,112 +714,6 @@ def deleteCuti(request, id):
       messages.error(request, f'Gagal menghapus data cuti: {e}')
       return redirect('/admins/cuti_master')
 
-def pengajuan_cuti(request):
-    user = get_object_or_404(Users, nik=request.session['nik_id'])
-
-    if request.method == 'POST':
-        leave_type_id = request.POST['cuti']
-        leave_type_obj = get_object_or_404(MasterLeaves, id=leave_type_id)
-        photo_file = request.FILES.get('photo') 
-        start_date = request.POST['start_date']
-        end_date = request.POST['end_date']
-        reason = request.POST['reason']
-
-        try:
-            new_leave_request = LeaveRequests(
-                nik=user,
-                leave_type=leave_type_obj,
-                start_date=start_date,
-                end_date=end_date,
-                reason=reason,
-            )
-            
-            if photo_file:
-                new_leave_request.photo = photo_file 
-            
-            new_leave_request.save()
-
-            messages.success(request, 'Data pengajuan cuti berhasil diupload.')
-            return redirect('pengajuan_cuti') 
-            
-        except Exception as e:
-            messages.error(request, f'Gagal mengupload data pengajuan cuti. Error: {e}')
-            return redirect('pengajuan_cuti')
-
-    cuti_list = MasterLeaves.objects.all()
-
-    pengajuan_list = LeaveRequests.objects.filter(
-        nik_id = user.nik
-    )
-            
-    context = {
-       'user': user,
-       'cuti_list':cuti_list,
-       'pengajuan_list': pengajuan_list,
-       'title': 'Pengajuan Cuti'
-    }
-
-    return render(request, 'admin/cuti/index.html', context)
-
-def edit_pengajuan_cuti(request, id):
-    user = get_object_or_404(Users, nik=request.session['nik_id'])
-
-    cuti_list = MasterLeaves.objects.all()
-
-    pengajuan = get_object_or_404(
-        LeaveRequests, 
-        nik_id=user.nik, 
-        id=id
-    )
-
-    if request.method == 'POST':
-        leave_type_id = request.POST['cuti']
-        leave_type_obj = get_object_or_404(MasterLeaves, id=leave_type_id)
-        photo_file = request.FILES.get('photo') 
-        start_date = request.POST['start_date']
-        end_date = request.POST['end_date']
-        reason = request.POST['reason']
-
-        try:
-            pengajuan = get_object_or_404(LeaveRequests, id=id)
-
-            pengajuan.leave_type =  leave_type_obj
-            pengajuan.start_date = start_date
-            pengajuan.end_date = end_date
-            pengajuan.reason = reason
-
-            if(photo_file):
-               pengajuan.photo = photo_file
-
-            pengajuan.save() 
-
-            messages.success(request, 'Data perubahan pengajuan cuti berhasil diupload.')
-            return redirect('pengajuan_cuti') 
-            
-        except Exception as e:
-            messages.error(request, f'Gagal mengupload perubahan data pengajuan cuti. Error: {e}')
-            return redirect('pengajuan_cuti')
-
-    context = {
-       'user': user,
-       'cuti_list':cuti_list,
-       'pengajuan': pengajuan,
-       'title': 'Edit Pengajuan Cuti'
-    }
-
-    return render(request, 'admin/cuti/editForm.html', context)
-
-def delete_pengajuan_cuti(request, id):
-    try:
-      cuti = get_object_or_404(LeaveRequests, id=id)
-      cuti.delete()
-
-      messages.success(request, 'Data pengajuan cuti berhasil dihapus.')
-      return redirect('/admins/pengajuan_cuti')
-    
-    except Exception as e:
-      messages.error(request, f'Gagal menghapus data pengajuan cuti: {e}')
-      return redirect('/admins/pengajuan_cuti')
 
 @login_auth
 @superadmin_required
