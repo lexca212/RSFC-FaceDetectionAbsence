@@ -1,0 +1,103 @@
+{% extends 'layouts/layout.html' %}
+{% load day_convert %}
+{% block content %}
+<style>
+    /* Fullscreen di mobile */
+    @media (max-width: 768px) {
+        .container-fullscreen {
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        .card-mobile {
+            border-radius: 0 !important;
+        }
+
+        table td, table th {
+            padding: 10px !important;
+            font-size: 15px !important;
+        }
+
+        .table thead th {
+            position: sticky;
+            top: 0;
+            background: #0d6efd;
+            color: white;
+            z-index: 10;
+        }
+    }
+
+    /* Warna badge */
+    .badge-libur {
+        background-color: #6c757d;
+    }
+    .badge-cuti {
+        background-color: #ffc107;
+        color: #000;
+    }
+    .badge-shift {
+        background-color: #198754;
+    }
+</style>
+
+
+<div class="container container-fullscreen mt-3">
+
+    <div class="card card-mobile shadow-sm">
+
+        <div class="card-header bg-primary text-white text-center py-3">
+            <h5 class="mb-0">
+                Jadwal {{ user.name }} <br>
+                <small>{{ user.nik }}</small> <br>
+                <small>{{ bulan_text }} {{ tahun }}</small>
+            </h5>
+        </div>
+
+        <div class="card-body p-2">
+
+            <div class="table-responsive table-hover">
+                <table class="table table-bordered text-center align-middle mb-0">
+
+                    <thead>
+                        <tr>
+                            <th style="width: 90px;">Tanggal</th>
+                            <th>Hari</th>
+                            <th>Jadwal</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for item in jadwal_bulanan %}
+                        <tr {% if item.jadwal == 'Libur' %} class='bg-secondary' {% elif item.jadwal == 'Cuti' %} class='bg-warning' {% endif %}>
+                            <td class="fw-bold">{{ item.tanggal }}</td>
+                            <td>{{ item.hari|hari_id }}</td>
+                            <td>
+                                {% if item.jadwal == "-" %}
+                                    <span class="badge bg-secondary" style="font-size: 16px;">{{ item.jadwal }}</span>
+                                
+                                {% elif item.jadwal == "Libur" %}
+                                    <span class="badge bg-secondary" style="font-size: 16px;">{{ item.jadwal }}</span>
+
+                                {% elif item.jadwal == "Cuti" %}
+                                    <span class="badge bg-warning text-dark" style="font-size: 16px;">{{ item.jadwal }}</span>
+
+                                {% else %}
+                                    <span class="badge bg-success" style="font-size: 16px;">{{ item.jadwal }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

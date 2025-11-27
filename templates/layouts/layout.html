@@ -125,11 +125,33 @@ scratch. This page gets rid of all links and provides the needed markup only.
         
         <hr style="background-color:dimgray">
 
-        
-
         <nav class="mt-2">
           <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
             <li class="nav-header">Data Saya</li>
+            <li class="nav-item">
+              <a href="{% url 'jadwal' %}" class="nav-link ">
+                <i class="nav-icon fa fa-calendar"></i>
+                <p>
+                    Jadwal
+                </p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'presensi' %}" class="nav-link ">
+                <i class="nav-icon fa fa-solid fa-table"></i>
+                <p>
+                    Riwayat Presensi
+                </p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'absence' %}" class="nav-link ">
+                <i class="fa fa-fw fa-clock nav-icon"></i>
+                <p>
+                    Masuk Absen
+                </p>
+              </a>
+            </li>
             <li class="nav-item">
               <a href="{% url 'pengajuan_cuti' %}" class="nav-link ">
                 <i class="nav-icon fas fa-user-times"></i>

@@ -1,0 +1,188 @@
+{% extends 'layouts/layout.html' %}
+{% load static %}
+{% block content %}
+<section class="content">
+  <div class="container-fluid">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h1 class="h3 mb-2 text-gray-800">Pengajuan Saya</h1> <br>
+        <a href="#" class="btn btn-primary " data-toggle="modal" data-target="#modalBuatCuti">
+          <i class="fa fa-plus"></i> Buat Pengajuan
+        </a>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-striped" id="tableprint" width="100%" cellspacing="0">
+            <thead>
+              <tr class='text-center'>
+                <th class='col-1'>Nama Cuti</th>
+                <th class='col-2'>Tanggal</th>
+                <th class='col-2'>Alasan Cuti</th>
+                <th class='col-2'>Foto Cuti</th>
+                <th class='col-1'>Status Cuti</th>
+                <th class='col-2'>Catatan</th>
+                <th class='col-2'>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if pengajuan_list %}
+              {% for pengajuan in pengajuan_list %}
+              <tr class="text-center">
+                <td>{{ pengajuan.leave_type.name }}</td>
+                <td>{{ pengajuan.start_date }} s.d. {{ pengajuan.end_date }}</td>
+                <td class="text-left">{{ pengajuan.reason }}</td>
+                <td>
+                  <img src="{{ pengajuan.photo.url }}" style="width:150px" alt="Surat Pengajuan Cuti">
+                </td>
+                <td>
+                  {% if pengajuan.status == 'approved' %}
+                    <span class="badge badge-primary"  style="font-size: 18px;">{{ pengajuan.status }}</span>
+                  {% elif pengajuan.status == 'rejected' %}
+                    <span class="badge badge-danger"  style="font-size: 18px;">{{ pengajuan.status }}</span>
+                  {% elif pengajuan.status == 'pending' %}
+                    <span class="badge badge-warning text-white" style="font-size: 18px;">{{ pengajuan.status }}</span>
+                  {% else %}
+                    <span class="badge badge-secondary"  style="font-size: 18px;">{{ pengajuan.status }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ pengajuan.note }}</td>
+                <td>
+                {% if pengajuan.status == 'pending' %}
+                  <a href="{% url 'edit_pengajuan_cuti' pengajuan.id %}" class="btn btn-sm btn-warning my-1"><i class="fa fa-edit"></i> Edit</a> |
+                  <a href="javascript:void(0);" class="btn btn-sm btn-danger my-1 btn-hapus" data-url="{% url 'delete_pengajuan_cuti' pengajuan.id %}"><i class="fa fa-times"></i> Batal</a>
+                {% else %}
+                  <span class="badge badge-info"  style="font-size: 18px;">{{ pengajuan.status }}</span>
+                {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+              {% else %}
+                <td colspan="8" class="text-center">Belum ada pengajuan cuti</td>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <br>
+</section>
+
+<!-- Modal Buat Pengajuan -->
+<div class="modal fade" id="modalBuatCuti">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header bg-primary">
+        <h4 class="modal-title text-white">Buat Pengajuan Cuti</h4>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+
+      <form method="POST" action="{% url 'pengajuan_cuti' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <input type='text' name="nik_id" id="nik_id" value="{{ user.nik }}" hidden>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Jenis Cuti</label>
+                <select class="form-control" name="cuti" required>
+                  <option value="" selected disabled>-- Pilih Cuti --</option>
+                  {% for cuti in cuti_list %}
+                  <option value="{{ cuti.id }}">{{ cuti.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Foto Pendukung</label>
+                <input type="file" class="form-control" id="photo" name="photo" accept="image/*"> 
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Tanggal Mulai</label>
+                <input type="date" class="form-control" id="start_date" name="start_date" required>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Tanggal Selesai</label>
+                <input type="date" class="form-control" id="end_date" name="end_date" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Alasan</label>
+            <textarea class='form-control' id='reason' name='reason' rows="3"></textarea>
+          </div>
+
+        </div>
+
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{% static 'assets/plugins/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'assets/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'assets/dist/js/adminlte.min.js' %}"></script>
+
+
+{% if messages %}
+<script>
+    {% for message in messages %}
+    Swal.fire({
+        icon: "{{ message.tags }}",  
+        title: "{{ message.tags|capfirst }}",
+        text: "{{ message }}",
+        showConfirmButton: false,
+        timer: 3000
+    });
+    {% endfor %}
+</script>
+{% endif %}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).on('click', '.btn-hapus', function(e){
+    e.preventDefault(); // cegah langsung menuju link
+
+    var url = $(this).attr("data-url");
+
+    Swal.fire({
+        title: 'Yakin ingin menghapus data ini?',
+        text: "Data yang sudah dihapus tidak bisa dikembalikan!",
+        icon: 'warning',
+        showCancelButton: true,
+        cancelButtonColor: '#E0A800',
+        confirmButtonColor: '#d33',
+        cancelButtonText: 'Batal',
+        confirmButtonText: 'Ya, hapus!',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Redirect manual ke URL penghapusan
+            window.location.href = url;
+        }
+    });
+});
+</script>
+{% endblock %}
