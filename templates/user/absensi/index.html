@@ -1,0 +1,93 @@
+{% extends "layouts/layout.html" %}
+{% load static %}
+{% load day_convert %}
+
+{% block content %}
+
+<div class="container mt-4">
+  <div class="card">
+    <div class="card-header bg-primary text-white">
+      <h3 class="mb-3">
+          Riwayat Absensi Bulan {{ bulan_text }} {{ tahun }}
+      </h3>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive shadow-sm">
+          <table class="table table-bordered table-striped">
+              <thead class="table-dark text-center">
+                  <tr>
+                      <th>Tanggal</th>
+                      <th>Hari</th>
+                      <th>Jam Masuk</th>
+                      <th>Status Masuk</th>
+                      <th>Jam Pulang</th>
+                      <th>Status Pulang</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  {% for item in absensi_bulanan %}
+                      <tr {% if item.status_in == 'Libur' %} class='bg-secondary' {% elif item.status_in == 'Cuti' %} class='bg-warning' {% endif %}>
+                          <td class="text-center">{{ item.tanggal }}</td>
+
+                          <!-- Translate English day → Indonesian -->
+                          <td class="text-center">{{ item.hari|hari_id }}</td>
+
+                          <td class="text-center">
+                              {% if item.jam_in %}
+                                  {{ item.jam_in }}
+                              {% else %}
+                                  -
+                              {% endif %}
+                          </td>
+
+                          <td class="text-center">
+                              {% if item.status_in == "Tepat Waktu" %}
+                                  <span class="badge bg-success" style="font-size:16px;">{{ item.status_in }}</span>
+                              {% elif item.status_in == "Terlambat" %}
+                                  <span class="badge bg-danger" style="font-size:16px;">{{ item.status_in }}</span>
+                              {% elif item.status_in == "Libur" %}
+                                  <span class="badge bg-secondary" style="font-size:16px;">{{ item.status_in }}</span>
+                              {% elif item.status_in == "Cuti" %}
+                                  <span class="badge bg-warning" style="font-size:16px;">{{ item.status_in }}</span>
+                              {% else %}
+                                  -
+                              {% endif %}
+                          </td>
+
+                          <td class="text-center">
+                              {% if item.jam_out %}
+                                  {{ item.jam_out }}
+                              {% else %}
+                                  -
+                              {% endif %}
+                          </td>
+
+                          <td class="text-center">
+                              {% if item.status_out == "Tepat Waktu" %}
+                                  <span class="badge bg-success" style="font-size:16px;">{{ item.status_out }}</span>
+                              {% elif item.status_out == "Pulang Cepat" %}
+                                  <span class="badge bg-danger text-dark" style="font-size:16px;">{{ item.status_out }}</span>
+                              {% elif item.status_out == "Libur" %}
+                                  <span class="badge bg-secondary text-dark" style="font-size:16px;">{{ item.status_out }}</span>
+                              {% elif item.status_out == "Cuti" %}
+                                  <span class="badge bg-warning text-dark" style="font-size:16px;">{{ item.status_out }}</span>
+                              {% else %}
+                                  -
+                              {% endif %}
+                          </td>
+                      </tr>
+                  {% empty %}
+                      <tr>
+                          <td colspan="6" class="text-center text-muted">
+                              Tidak ada data absensi bulan ini.
+                          </td>
+                      </tr>
+                  {% endfor %}
+              </tbody>
+          </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
