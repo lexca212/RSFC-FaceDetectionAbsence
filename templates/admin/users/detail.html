@@ -1,0 +1,108 @@
+{% extends 'layouts/layout.html' %}
+{% load static %}
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h4 class="mb-0">Detail Karyawan</h4>
+                </div>
+                <div class="card-body p-4">
+
+                    <div class="text-center mb-0">
+                        <div class='align-center'>
+                          <img style='width: 250px; height: 250px;' src="{{ user_detail.photo.url }}" alt="Foto Profil" class="profile-photo mb-3">
+                        </div>
+                        
+                        <h2 class="mb-0 text-center">{{ user_detail.name }}</h2> 
+                    </div>
+
+                    <hr>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th colspan="2" class="text-center">Informasi Lengkap Karyawan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="width: 40%;"><b>NIK</b></td>
+                                    <td><b>{{ user_detail.nik }}</b></td>
+                                </tr>
+                                <tr>
+                                    <td><b>Nama Lengkap</b></td>
+                                    <td>{{ user_detail.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Email</b></td>
+                                    <td>{{ user_detail.email|default:"-" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Divisi (Data Master)</b></td>
+                                    <td>
+                                        {% if division_detail %}
+                                            {{ division_detail.name }} (ID: {{ division_detail.id }})
+                                        {% else %}
+                                            <span class="text-danger">Data Master Divisi Tidak Ditemukan: {{ user_detail.divisi }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><b>Status Akun</b></td>
+                                    <td>
+                                        {% if user_detail.is_admin == 2 %}
+                                            <span class="badge bg-success" style="font-size: 15px;">Administrator (Super User)</span>
+                                        {% elif user_detail.is_admin == 1 %}
+                                            <span class="badge bg-info" style="font-size: 15px;">Penanggung Jawab Divisi (Admin Divisi)</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary" style="font-size: 15px;">User (Non Administrator)</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><b>Terdaftar Sejak</b></td>
+                                    <td>{{ user_detail.created_at|date:"d F Y, H:i" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Terakhir Diperbarui</b></td>
+                                    <td>{{ user_detail.updated_at|date:"d F Y, H:i" }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <hr class="mt-4 mb-4">
+                    
+                    <div class="text-center">
+                        <a href="{% url 'karyawan' %}" class="btn btn-secondary"> 
+                            <i class="fas fa-angle-double-left"></i> Kembali
+                        </a>
+                        <a href="{% url 'editKaryawan' user_detail.nik %}" class="btn btn-warning me-2">
+                            <i class="fas fa-edit"></i> Edit Data
+                        </a>
+                        <a href="#" class="btn btn-danger me-2">
+                            <i class="fas fa-trash"></i></i> Hapus
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-photo {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 4px solid #0d6efd;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}

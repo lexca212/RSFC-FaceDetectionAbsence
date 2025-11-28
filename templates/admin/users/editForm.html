@@ -1,0 +1,106 @@
+{% extends 'layouts/layout.html' %}
+{% load static %}
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-warning text-dark py-3">
+                    <h4 class="mb-0"><i class="fas fa-pencil-alt me-2"></i> Edit Data Karyawan: <b>{{ detail_user.name }}</b></h4>
+                </div>
+                
+                <div class="card-body p-4">
+                    
+                    <form method="POST" enctype="multipart/form-data" action="">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-5 text-center border-end">
+                                
+                                <h5 class="text-primary mb-3">Foto Profil</h5>
+                                <img src="{{ detail_user.photo.url }}" alt="Foto Profil Saat Ini" 
+                                     class="profile-photo mb-3" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; border: 3px solid #ccc;">
+
+                                <div class="mb-3">
+                                    <small class="form-text text-muted">Foto tidak bisa diubah kecuali terdapat ketidak cocokan data.</small>
+                                    <small class="form-text text-danger">Hubungi IT untuk penyesuaian foto.</small>
+                                    
+                                </div>
+                                
+                                <hr class="my-4 d-md-none">
+                            </div>
+
+                            <div class="col-md-7">
+                                
+                                <h5 class="text-primary mb-3">Data Pribadi</h5>
+
+                                <div class="mb-3">
+                                    <label for="id_nik" class="form-label">NIK</label>
+                                    <input type="text" class="form-control" id="id_nik" name="nik" 
+                                           value="{{ detail_user.nik }}" readonly>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="id_name" class="form-label">Nama Lengkap</label>
+                                    <input type="text" class="form-control" id="id_name" name="name" 
+                                           value="{{ detail_user.name }}" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="id_email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="id_email" name="email" 
+                                           value="{{ detail_user.email|default:'' }}">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="id_divisi" class="form-label">Divisi</label>
+                                    <select class="form-control" id="id_divisi" name="divisi" required>
+
+                                        <option value="" selected disabled>--- Pilih Divisi ---</selected>
+                                        {% comment %} <option value="{{ detail_user.divisi }}" selected>
+                                            **Saat Ini:** {% if division_detail %}{{ division_detail.name }} ({{ detail_user.divisi }}){% else %}{{ detail_user.divisi|default:"--- Pilih Divisi ---" }}{% endif %}
+                                        </option> {% endcomment %}
+                                        
+                                        {% for div in all_divisions %}
+                                                <option value="{{ div.id }}"
+                                                {% if div.id == detail_user.divisi %}
+                                                selected
+                                                {% endif %}
+                                                >{{ div.name }}</option>
+                                        {% endfor %}
+                                        
+                                    </select>
+                                </div>
+
+                                <hr class="my-4">
+
+                                <h5 class="text-primary mb-3">Pengaturan Akun</h5>
+
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" id="id_is_admin" name="is_admin" 
+                                           {% if detail_user.is_admin == 1 %}checked{% endif %}>
+                                    <label class="form-check-label" for="id_is_admin">Admin Divisi ? <small class="text-danger">(Penanggung Jawab)</small></label>
+                                </div>
+                                
+                            </div>
+                        </div>
+
+                        <hr class="mt-4 mb-4">
+                        
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-success btn-lg me-3">
+                                <i class="fas fa-save me-1"></i> Simpan 
+                            </button>
+                            <a href="{% url 'karyawan' %}" class="btn btn-danger btn-lg">
+                                <i class="fas fa-times me-1"></i> Batal
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

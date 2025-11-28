@@ -2,6 +2,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.shortcuts import render, redirect , get_object_or_404
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.contrib import messages
 from .decorators import *
@@ -820,7 +821,77 @@ def detail_pengajuan(request, id):
 
     return render(request, 'admin/cuti_persetujuan/detail.html', context)
 
+@login_auth
+@superadmin_required
+def karyawan(request):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
+
+    all_users = Users.objects.all().order_by('nik')
+
+    paginator = Paginator(all_users, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    divisi_names = set(u.divisi for u in page_obj.object_list if u.divisi)
+
+    divisions_map = {
+        div.id: div
+        for div in MasterDivisions.objects.filter(id__in=divisi_names)
+    }
+
+    for u in page_obj.object_list:
+        if u.divisi in divisions_map:
+            u.divisi = divisions_map[u.divisi]
+        else:
+            u.divisi = None 
+
+    context = {
+        'user': user,
+        'page_obj': page_obj,
+        'title': 'Daftar Karyawan',
+    }
+
+    return render(request, 'admin/users/index.html', context)
+
+@login_auth
+@superadmin_required
+def detail_karyawan(request, nik):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
+
+    user_detail = get_object_or_404(Users, nik=nik)
+
+    division_detail = None
+    
+    if user_detail.divisi:
+        try:
+            division_detail = MasterDivisions.objects.get(id=user_detail.divisi)
+        except MasterDivisions.DoesNotExist:
+            division_detail = None
+    
+    context = {
+        'user': user,
+        'user_detail': user_detail,
+        'division_detail': division_detail, 
+        'title': 'Profile ' + user_detail.name
+    }
+
+    return render(request, 'admin/users/detail.html', context)
+
+@login_auth
+@superadmin_required
+def editKaryawan(request, nik):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
+
+    detail_user = get_object_or_404(Users, nik=nik)
+
+    all_divisions = MasterDivisions.objects.all()
 
 
+    context = {
+        'user': user,
+        'detail_user': detail_user,
+        'all_divisions': all_divisions,
+        'title': 'Edit data ' + detail_user.name
+    }
 
-
+    return render(request, 'admin/users/editForm.html', context)

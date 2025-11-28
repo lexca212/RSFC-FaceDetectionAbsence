@@ -1,0 +1,128 @@
+{% extends 'layouts/layout.html' %}
+{% load static %}
+{% block content %}
+<div class="wrapper">
+    <div class="content-wrapper" style="margin-left: 0 !important;">
+        <section class="content">
+            <div class="container-fluid">
+                <div class="row pt-3">
+                    <div class="col-12">
+                        <h1 class="m-0 text-dark">{{ title }}</h1>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Daftar Seluruh Karyawan (Total: {{ page_obj.paginator.count }})</h3>
+                                <div class="card-tools">
+                                    <a href="{% url 'addUser' %}" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i> Tambah Karyawan Baru </a>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-striped table-hover">
+                                        <thead>
+                                            <tr class="text-center">
+                                                <th class="">No.</th>
+                                                <th class="col-2">NIK</th>
+                                                <th class="col-3">Nama Karyawan</th>
+                                                <th class="col-2">Email</th>
+                                                <th class="col-3">Divisi</th>
+                                                <th class="col-2">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% if page_obj %}
+                                                {% regroup divisi_list by forloop.counter0 as index %}
+                                                {% for user in page_obj %}
+                                                <tr>
+                                                    <td>{{ forloop.counter }}</td>
+                                                    <td>{{ user.nik }}</td>
+                                                    <td>{{ user.name }}</td> 
+                                                    <td>{{ user.email }}</td>
+                                                    <td class="text-center">{{ user.divisi.name }}</td>
+                                                    <td class="action-buttons text-center">
+                                                        <a href="{% url 'detail_karyawan' user.nik %}" class="btn btn-info btn-sm" title="Detail"><i class="fas fa-eye"></i></a>
+                                                        <a href="" class="btn btn-warning btn-sm" title="Edit"><i class="fas fa-edit"></i></a>
+                                                        <button class="btn btn-danger btn-sm" title="Hapus" onclick="">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                {% empty %}
+                                                <tr>
+                                                    <td colspan="6" class="text-center text-muted">Tidak ada data karyawan yang ditemukan.</td>
+                                                </tr>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div class="card-footer clearfix">
+                                <div class="row">
+                                    <div class="col-sm-12 col-md-5 d-flex align-items-center">
+                                        <div class="dataTables_info" role="status" aria-live="polite">
+                                            Menampilkan 
+                                            {% if page_obj.has_other_pages %}
+                                                {{ page_obj.start_index }} sampai {{ page_obj.end_index }} dari {{ page_obj.paginator.count }} entri
+                                            {% else %}
+                                                Semua {{ page_obj.paginator.count }} entri
+                                            {% endif %}
+                                            (Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }})
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-sm-12 col-md-7">
+                                        <ul class="pagination pagination-sm m-0 float-right">
+                                            
+                                            {% if page_obj.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ request.path }}?page=1">&laquo;</a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ request.path }}?page={{ page_obj.previous_page_number }}">
+                                                    Sebelumnya
+                                                </a>
+                                            </li>
+                                            {% else %}
+                                            <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                                            <li class="page-item disabled"><span class="page-link">Sebelumnya</span></li>
+                                            {% endif %}
+                                            
+                                            {% for num in page_obj.paginator.page_range %}
+                                                {% if num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                                        <a class="page-link" href="{{ request.path }}?page={{ num }}">{{ num }}</a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                            
+                                            {% if page_obj.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ request.path }}?page={{ page_obj.next_page_number }}">
+                                                    Selanjutnya
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ request.path }}?page={{ page_obj.paginator.num_pages }}">&raquo;</a>
+                                            </li>
+                                            {% else %}
+                                            <li class="page-item disabled"><span class="page-link">Selanjutnya</span></li>
+                                            <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
