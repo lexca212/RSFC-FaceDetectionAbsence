@@ -17,3 +17,5 @@ db.sqlite3
 /static/cuti_img/*.jpeg
 /static/cuti_img/*.png
 /static/cuti_img/*.jpg
+
+/staticfiles/
