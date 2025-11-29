@@ -19,23 +19,30 @@ def login(request):
         email = request.POST['email']
         password = request.POST['password']
 
-        try:
-            user = get_object_or_404(Users, email=email)
+        if not email or not password:
+            messages.error(request, 'email and password are required')
+            return redirect('/admins/login')
 
-            if check_password(password, user.password):
-              request.session['nik_id'] = user.nik
-              request.session['is_admin'] = user.is_admin
+        user = Users.objects.filter(email=email).first()
 
-              if user.is_admin == 2:  
-                return redirect('/admins/dashboard')
-              elif user.is_admin == 1:
-                return redirect('/admins/mapping_jadwal')
-              else:
-                 return redirect('/users/jadwal')
-                  
-        except Admins.DoesNotExist:
-            messages.error(request, 'Invalid email or password')
-            return redirect('/admins/login') 
+        if user is None:
+            messages.error(request, 'Your email is not registerd')
+            return redirect('/admins/login')
+
+        if not check_password(password, user.password):
+            messages.error(request, 'Your password is invalid')
+            return redirect('/admins/login')
+
+        request.session['nik_id'] = user.nik
+        request.session['is_admin'] = user.is_admin
+
+        if user.is_admin == 2:
+            return redirect('/admins/dashboard')
+        elif user.is_admin == 1:
+            return redirect('/admins/mapping_jadwal')
+        else:
+            return redirect('/users/jadwal')
+
     return render(request, 'admin/login.html')
 
 def logout(request):
