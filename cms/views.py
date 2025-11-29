@@ -884,13 +884,44 @@ def editKaryawan(request, nik):
 
     detail_user = get_object_or_404(Users, nik=nik)
 
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        divisi = request.POST.get('divisi')
+        
+        is_admin_input = request.POST.get('is_admin')
+        is_admin = True if is_admin_input == 'on' else False
+        
+        try:
+            detail_user.name = name
+            detail_user.email = email
+            detail_user.divisi = divisi
+            detail_user.is_admin = is_admin
+
+            detail_user.save()
+
+            messages.success(request, 'Data Karyawan berhasil diupdate.')
+            return redirect('karyawan')
+        
+        except Exception as e:
+            messages.error(request, f'Gagal mengupdate data Karyawan: {e}')
+            
+            return redirect('editKaryawan', nik=detail_user.nik) 
+
     all_divisions = MasterDivisions.objects.all()
 
+    division_detail = None
+    if detail_user.divisi:
+        try:
+            division_detail = MasterDivisions.objects.get(name=detail_user.divisi)
+        except MasterDivisions.DoesNotExist:
+            pass
 
     context = {
         'user': user,
         'detail_user': detail_user,
         'all_divisions': all_divisions,
+        'division_detail': division_detail,
         'title': 'Edit data ' + detail_user.name
     }
 
