@@ -8,7 +8,13 @@ class Users(models.Model):
     divisi = models.CharField(max_length=100,null=True)
     email = models.EmailField(unique=True, null=True, blank=True)
     password = models.CharField(max_length=100)
-    is_admin = models.BooleanField(default=False)
+    is_admin = models.IntegerField(choices=[
+        (0, 'User'),
+        (1, 'Admin'),
+        (2, 'Super User')
+    ],
+    default=0
+)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

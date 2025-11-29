@@ -74,7 +74,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
             <img src="{{ user.photo.url }}" class="brand-image img-circle elevation-3" style="opacity: .8; width:35px; height: 35px" alt="User Image">
           </div>
           <div class="info">
-            <a class="d-block">{{ user.name }}</a>
+            <a href="{% url 'profile' user.nik %}" class="d-block">{{ user.name }}</a>
           </div>
         </div>
 

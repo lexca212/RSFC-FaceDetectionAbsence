@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.files.storage import default_storage
+from django.contrib.auth.hashers import make_password
 from django.core.files.base import ContentFile  
 from datetime import datetime, timedelta
 from django.http import JsonResponse
@@ -371,3 +372,51 @@ def presensi(request):
     }
 
     return render(request, "user/absensi/index.html", context)
+
+def profile(request, nik):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
+
+    detail_user = get_object_or_404(Users, nik=nik)
+
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        divisi = request.POST.get('divisi')
+        password_baru = request.POST.get('password')
+        
+        try:
+            detail_user.name = name
+            detail_user.email = email
+            detail_user.divisi = divisi
+
+            if password_baru:
+                detail_user.password = make_password(password_baru)
+
+            detail_user.save()
+
+            messages.success(request, 'Data Anda berhasil diupdate.')
+            return redirect('profile', nik=detail_user.nik)
+        
+        except Exception as e:
+            messages.error(request, f'Gagal mengupdate data Anda: {e}')
+            
+            return redirect('profile', nik=detail_user.nik) 
+
+    all_divisions = MasterDivisions.objects.all()
+
+    division_detail = None
+    if detail_user.divisi:
+        try:
+            division_detail = MasterDivisions.objects.get(name=detail_user.divisi)
+        except MasterDivisions.DoesNotExist:
+            pass
+
+    context = {
+        'user': user,
+        'detail_user': detail_user,
+        'all_divisions': all_divisions,
+        'division_detail': division_detail,
+        'title': 'Profile ' + detail_user.name
+    }
+
+    return render(request, 'user/profile/index.html', context)

@@ -9,5 +9,7 @@ urlpatterns = [
     path('delete_pengajuan_cuti/<int:id>', delete_pengajuan_cuti, name='delete_pengajuan_cuti'),
 
     path('jadwal/', jadwal, name='jadwal'),
-    path('presensi/', presensi, name='presensi')
+    path('presensi/', presensi, name='presensi'),
+
+    path('profile/<str:nik>', profile, name='profile')
 ]
