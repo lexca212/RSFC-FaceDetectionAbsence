@@ -82,10 +82,10 @@
                             <i class="fas fa-angle-double-left"></i> Kembali
                         </a>
                         <a href="{% url 'editKaryawan' user_detail.nik %}" class="btn btn-warning me-2">
-                            <i class="fas fa-edit"></i> Edit Data
+                            <i class="fas fa-edit"></i> 
                         </a>
-                        <a href="#" class="btn btn-danger me-2">
-                            <i class="fas fa-trash"></i></i> Hapus
+                        <a href="javascript:void(0);" class="btn btn-danger btn-hapus" data-url="{% url 'deleteKaryawan' user_detail.nik %}">
+                            <i class="fa fa-trash"></i> 
                         </a>
                     </div>
                 </div>
@@ -105,4 +105,31 @@
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).on('click', '.btn-hapus', function(e){
+    e.preventDefault(); // cegah langsung menuju link
+
+    var url = $(this).attr("data-url");
+
+    Swal.fire({
+        title: 'Yakin ingin menghapus data ini?',
+        text: "Data yang sudah dihapus tidak bisa dikembalikan!",
+        icon: 'warning',
+        showCancelButton: true,
+        cancelButtonColor: '#E0A800',
+        confirmButtonColor: '#d33',
+        cancelButtonText: 'Batal',
+        confirmButtonText: 'Ya, hapus!',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Redirect manual ke URL penghapusan
+            window.location.href = url;
+        }
+    });
+});
+</script>
 {% endblock %}

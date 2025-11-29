@@ -38,6 +38,7 @@ urlpatterns = [
     path('karyawan/', karyawan, name='karyawan'),
     path('detail_karyawan/<str:nik>', detail_karyawan, name='detail_karyawan'),
     path('editKaryawan/<str:nik>', editKaryawan, name='editKaryawan'),
+    path('deleteKaryawan/<str:nik>', deleteKaryawan, name='deleteKaryawan'),
 
     path('err403/', err403, name='err403')
 ]

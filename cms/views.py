@@ -926,3 +926,25 @@ def editKaryawan(request, nik):
     }
 
     return render(request, 'admin/users/editForm.html', context)
+
+@login_auth
+@superadmin_required
+def deleteKaryawan(request, nik):
+    try:
+      user = get_object_or_404(Users, nik=nik)
+      user.delete()
+
+      messages.success(request, 'Data karyawan berhasil dihapus.')
+      return redirect('karyawan')
+    
+    except Exception as e:
+      messages.error(request, f'Gagal menghapus data karyawan: {e}')
+      return redirect('karyawan')
+    
+
+
+
+
+
+
+    
