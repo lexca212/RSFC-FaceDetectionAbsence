@@ -16,6 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.shortcuts import render
+
+def not_found(request, exception):
+    return render(request, 'admin/404.html', status=404)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,3 +29,5 @@ urlpatterns = [
     path('admins/',include('cms.urls')),
 
 ]
+
+handler404 = not_found
