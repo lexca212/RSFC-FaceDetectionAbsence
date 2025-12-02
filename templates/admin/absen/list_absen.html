@@ -29,6 +29,7 @@
                         <th>Tanggal Keluar</th>
                         <th>Status Keluar</th>
                         <th>Keterlambatan</th>
+                        <th>Total Durasi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -49,13 +50,13 @@
                         <td>{{ absen.date_in|date:"d M Y H:i" }}</td>
                         <td class="
                                 {% if absen.status_in == 'Terlambat' %}
-                                    bg-danger text-white
+                                    text-danger 
                                 {% elif absen.status_in == 'Tepat Waktu' %}
-                                    bg-primary text-white
+                                    text-success 
                                 {% elif absen.status_in == 'Libur'%}
-                                    bg-secondary text-white
+                                    text-secondary 
                                 {% elif absen.status_in == 'Cuti'%}
-                                    bg-warning text-white
+                                    text-warning 
                                 {% endif %}
                             ">
                             {{ absen.status_in }}
@@ -68,21 +69,36 @@
                             {% endif %}
                         </td>
                         <td class="
-                                {% if absen.status_out == 'Terlambat' %}
-                                    bg-danger text-white
+                                {% if absen.status_out == 'Pulang Cepat' %}
+                                    text-danger 
                                 {% elif absen.status_out == 'Tepat Waktu' %}
-                                    bg-primary text-white
+                                    text-success 
                                 {% elif absen.status_out == 'Libur'%}
-                                    bg-secondary text-white
+                                    text-secondary 
                                 {% elif absen.status_out == 'Cuti'%}
-                                    bg-warning text-white
+                                    text-warning 
                                 {% else %}
                                 {% endif %}
                             ">
                             {{ absen.status_out|default:"-" }}
                         </td>
                         <td>
-                            <!-- keterlambatan -->
+                            {% if absen.late_minutes > 0 %}
+                                <span class="text-danger">{{ absen.late_time }} ({{ absen.late_minutes }} menit)</span>
+                            {% elif absen.status_in == 'Cuti' %}
+                                <span class="text-warning">Cuti</span>
+                            {% elif absen.status_in == 'Libur'%}
+                                <span class="text-warning">Libur</span>
+                            {% else %}
+                                <span class="text-success">Tidak Terlambat</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if absen.total_work %}
+                                {{ absen.total_work }} ({{ absen.total_work_minutes }} menit)
+                            {% else %}
+                                <span class="text-muted">Belum pulang</span>
+                            {% endif %}
                         </td>
                     </tr>
                     {% empty %}

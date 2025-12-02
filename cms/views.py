@@ -619,17 +619,63 @@ def index_absen(request):
 def absen(request, divisi_id):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
-    list_absen = InAbsences.objects.filter(
-        nik__divisi=divisi_id
-    ).select_related('nik').order_by('date_in')
+    list_absen = (
+        InAbsences.objects.filter(nik__divisi=divisi_id)
+        .select_related('nik', 'schedule')
+        .order_by('date_in').order_by('nik')
+    )
 
     absensi_per_bulan = {}
 
-    from datetime import datetime
+    from datetime import datetime, timedelta
 
     for absen in list_absen:
         bulan_key = absen.date_in.strftime("%Y-%m")
-        
+
+        late_minutes = 0
+        late_time = None
+
+        if absen.schedule and absen.schedule.start_time:
+
+            scheduled_naive = datetime.combine(
+                absen.date_in.date(),
+                absen.schedule.start_time
+            )
+            from django.utils import timezone
+
+            scheduled_in = timezone.make_aware(
+                scheduled_naive,
+                timezone.get_current_timezone()
+            )
+
+            actual_in = absen.date_in
+
+            diff_seconds = (actual_in - scheduled_in).total_seconds()
+
+            if diff_seconds > 0:
+                late_minutes = int(diff_seconds // 60)
+                late_time = str(timedelta(minutes=late_minutes))
+
+        absen.late_minutes = late_minutes
+        absen.late_time = late_time
+
+        total_work = None
+        total_minutes = 0
+
+        if absen.date_out:
+
+            actual_in = absen.date_in
+            actual_out = absen.date_out
+
+            diff_seconds = (actual_out - actual_in).total_seconds()
+
+            if diff_seconds > 0:
+                total_minutes = int(diff_seconds // 60)
+                total_work = str(timedelta(minutes=total_minutes))
+
+        absen.total_work = total_work
+        absen.total_work_minutes = total_minutes
+
         if bulan_key not in absensi_per_bulan:
             absensi_per_bulan[bulan_key] = []
 
