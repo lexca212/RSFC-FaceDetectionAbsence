@@ -79,6 +79,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
         </div>
 
         <!-- Sidebar Menu -->
+        {% if user.is_admin == 2 %}
         <nav class="mt-2">
           <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
             <!-- Add icons to the links using the .nav-icon class
@@ -93,9 +94,12 @@ scratch. This page gets rid of all links and provides the needed markup only.
         </nav>
 
         <hr style="background-color:dimgray">
+
+        {% endif %}
         
         <nav class="mt-2">
           <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+            {% if user.is_admin != 0 %}
             <li class="nav-item active">
               <a href="{% url 'karyawan' %}" class="nav-link">
                 <i class="nav-icon fa fa-users fa-table"></i>
@@ -103,15 +107,17 @@ scratch. This page gets rid of all links and provides the needed markup only.
               </a>
             </li>
             <li class="nav-item active">
-              <a href="{% url 'absen' %}" class="nav-link">
-                <i class="nav-icon fa fa-solid fa-table"></i>
-                <p>Data Absen</p>
-              </a>
-            </li>
-            <li class="nav-item active">
               <a href="{% url 'mapping_jadwal' %}" class="nav-link">
                 <i class="nav-icon fa fa-puzzle-piece"></i>
                 <p>Mapping Jadwal Karyawan</p>
+              </a>
+            </li>
+            {% endif %}
+            {% if user.is_admin == 2 %}
+            <li class="nav-item active">
+              <a href="{% url 'absen' %}" class="nav-link">
+                <i class="nav-icon fa fa-solid fa-table"></i>
+                <p>Data Absen</p>
               </a>
             </li>
             <li class="nav-item active">
@@ -126,10 +132,13 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 <p>Tambah Data Karyawan</p>
               </a>
             </li>
+            {% endif %}
           </ul>
         </nav>
-        
+
+        {% if user.is_admin != 0 %}
         <hr style="background-color:dimgray">
+        {% endif %}
 
         <nav class="mt-2">
           <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
@@ -169,6 +178,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
           </ul>
         </nav>
 
+        {% if user.is_admin == 2 %}
         <hr style="background-color:dimgray">
 
         <nav class="mt-2">
@@ -203,7 +213,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
             </li>
           </ul>
         </nav>
-
+        {% endif %}
 
         <!-- /.sidebar-menu -->
       </div>
