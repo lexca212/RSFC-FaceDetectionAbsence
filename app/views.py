@@ -4,6 +4,7 @@ from django.contrib.auth.hashers import make_password
 from django.core.files.base import ContentFile  
 from datetime import datetime, timedelta
 from cms.decorators import login_auth
+from django.utils.timezone import now
 from django.http import JsonResponse
 from django.contrib import messages
 from datetime import date, datetime
@@ -254,43 +255,67 @@ def pengajuan_cuti(request):
     if request.method == 'POST':
         leave_type_id = request.POST['cuti']
         leave_type_obj = get_object_or_404(MasterLeaves, id=leave_type_id)
-        photo_file = request.FILES.get('photo') 
+        photo_file = request.FILES.get('photo')
         start_date = request.POST['start_date']
         end_date = request.POST['end_date']
         reason = request.POST['reason']
 
-        try:
-            new_leave_request = LeaveRequests(
-                nik=user,
-                leave_type=leave_type_obj,
-                start_date=start_date,
-                end_date=end_date,
-                reason=reason,
-            )
-            
-            if photo_file:
-                new_leave_request.photo = photo_file 
-            
-            new_leave_request.save()
+        current_year = now().year
 
-            messages.success(request, 'Data pengajuan cuti berhasil diupload.')
-            return redirect('pengajuan_cuti') 
-            
-        except Exception as e:
-            messages.error(request, f'Gagal mengupload data pengajuan cuti. Error: {e}')
-            return redirect('pengajuan_cuti')
+        kuota_tidak_dibatasi = (leave_type_obj.default_quota == 0)
+
+        pengajuan_tahun_ini = LeaveRequests.objects.filter(
+            nik_id=user.nik,
+            leave_type_id=leave_type_id,
+            created_at__year=current_year
+        )
+
+        total_hari_terpakai = 0
+        for pengajuan in pengajuan_tahun_ini:
+            total_hari_terpakai += (pengajuan.end_date - pengajuan.start_date).days + 1
+
+        start_date_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_date_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+        hari_cuti_baru = (end_date_obj - start_date_obj).days + 1
+
+        if not kuota_tidak_dibatasi:
+            if total_hari_terpakai + hari_cuti_baru > leave_type_obj.default_quota:
+                messages.error(
+                    request,
+                    (
+                        f"Pengajuan gagal! Total hari cuti '{leave_type_obj.name}' "
+                        f"yang diajukan ({hari_cuti_baru} hari) + yang sudah digunakan "
+                        f"({total_hari_terpakai} hari) melebihi kuota "
+                        f"{leave_type_obj.default_quota} hari."
+                    )
+                )
+                return redirect('pengajuan_cuti')
+
+        new_leave_request = LeaveRequests(
+            nik=user,
+            leave_type=leave_type_obj,
+            start_date=start_date,
+            end_date=end_date,
+            reason=reason,
+        )
+
+        if photo_file:
+            new_leave_request.photo = photo_file
+
+        new_leave_request.save()
+
+        messages.success(request, 'Pengajuan cuti berhasil diupload.')
+        return redirect('pengajuan_cuti')
 
     cuti_list = MasterLeaves.objects.all()
+    pengajuan_list = LeaveRequests.objects.filter(nik_id=user.nik)
 
-    pengajuan_list = LeaveRequests.objects.filter(
-        nik_id = user.nik
-    )
-            
     context = {
-       'user': user,
-       'cuti_list':cuti_list,
-       'pengajuan_list': pengajuan_list,
-       'title': 'Pengajuan Cuti'
+        'user': user,
+        'cuti_list': cuti_list,
+        'pengajuan_list': pengajuan_list,
+        'title': 'Pengajuan Cuti'
     }
 
     return render(request, 'user/cuti/index.html', context)

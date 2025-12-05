@@ -833,9 +833,12 @@ def deleteCuti(request, id):
 def persetujuan_cuti(request):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
-    pengajuan_list = LeaveRequests.objects.filter(status='pending')
+    from django.utils.timezone import now
+    current_year = now().year
 
-    approve_list = LeaveRequests.objects.exclude(status='pending')
+    pengajuan_list = LeaveRequests.objects.filter(status='pending', created_at__year=current_year)
+
+    approve_list = LeaveRequests.objects.exclude(status='pending').filter(created_at__year=current_year)
 
     context = {
        'user': user,
