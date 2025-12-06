@@ -36,16 +36,41 @@ function resizeOverlay() {
   overlay.height = video.videoHeight;
 }
 
-function drawLandmarks(landmarks) {
+function drawLandmarks(landmarks, connections, boundingBox) { 
   overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
-  overlayCtx.lineWidth = 1;
-  overlayCtx.strokeStyle = 'rgba(0,255,0,0.8)';
-  overlayCtx.fillStyle = 'rgba(255,0,0,0.8)';
+
+  if (boundingBox) {
+      const { minX, minY, maxX, maxY } = boundingBox;
+      
+      const cornerLength = 25;
+      const cornerWidth = 4;
+      
+      overlayCtx.strokeStyle = 'cyan'; 
+      overlayCtx.lineWidth = cornerWidth;
+
+      const drawCorner = (x1, y1, x2, y2, x3, y3) => {
+          overlayCtx.beginPath();
+          overlayCtx.moveTo(x1, y1);
+          overlayCtx.lineTo(x2, y2);
+          overlayCtx.lineTo(x3, y3);
+          overlayCtx.stroke();
+      };
+
+      drawCorner(minX, minY + cornerLength, minX, minY, minX + cornerLength, minY);
+      drawCorner(maxX - cornerLength, minY, maxX, minY, maxX, minY + cornerLength);
+      drawCorner(maxX, maxY - cornerLength, maxX, maxY, maxX - cornerLength, maxY);
+      drawCorner(minX + cornerLength, maxY, minX, maxY, minX, maxY - cornerLength);
+  }
+
+  overlayCtx.fillStyle = 'cyan';
+  const dotRadius = 0.95; 
+
   for (let i = 0; i < landmarks.length; i++) {
     const x = landmarks[i].x * overlay.width;
     const y = landmarks[i].y * overlay.height;
+    
     overlayCtx.beginPath();
-    overlayCtx.arc(x, y, 1.2, 0, Math.PI * 2);
+    overlayCtx.arc(x, y, dotRadius, 0, Math.PI * 2);
     overlayCtx.fill();
   }
 }
@@ -81,8 +106,8 @@ function autoCaptureAndSend() {
           <div class="mt-3">
             <p class="mb-1">
               <strong style="color: ${
-                (response.status_absen === 'Terlambat' || response.status_absen === 'Pulang Cepat') ? 'red' :
-                (response.status_absen === 'Tepat Waktu' ? 'blue' : 'black')
+                (response.status_absen === 'Terlambat' || response.status_absen === 'Pulang Cepat') ? '#C82333' :
+                (response.status_absen === 'Tepat Waktu' ? '#56AEDA' : 'black')
               };">${response.status_absen}</strong>
             </p>
             <p class="mb-1"><strong>${response.time}</strong></p>
@@ -153,19 +178,33 @@ faceMesh.onResults((results) => {
 
     const landmarks = results.multiFaceLandmarks[0];
 
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    
+    for (let i = 0; i < landmarks.length; i++) {
+        const x = landmarks[i].x * overlay.width;
+        const y = landmarks[i].y * overlay.height;
+
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+    }
+  
+    const margin = 10;
+    const calculatedBox = {
+        minX: minX - margin,
+        minY: minY - margin,
+        maxX: maxX + margin,
+        maxY: maxY + margin
+    };
+
     if (DRAW_LANDMARKS) {
-        overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
-
-        for (let i = 0; i < landmarks.length; i++) {
-
-            const x = landmarks[i].x * overlay.width;
-            const y = landmarks[i].y * overlay.height;
-
-            overlayCtx.beginPath();
-            overlayCtx.arc(x, y, 2, 0, Math.PI * 2);
-            overlayCtx.fillStyle = "red";
-            overlayCtx.fill();
-        }
+        const connections = window.FaceMesh ? window.FaceMesh.FACEMESH_TESSELATION : [];
+        drawLandmarks(landmarks, connections, calculatedBox);
     }
 
     const leftEye = LEFT_EYE_IDX.map(i => ({x: landmarks[i].x, y: landmarks[i].y}));

@@ -34,7 +34,7 @@ def calculate_dynamic_threshold(encodings, safety_factor=0.85):
             distances.append(d)
 
     min_dist = np.min(distances)
-    print(f'{min_dist}')
+    # print(f'{min_dist}')
 
     dynamic_threshold = min_dist * safety_factor
 
@@ -129,20 +129,20 @@ def absence(request):
 
 
         threshold = calculate_dynamic_threshold(known_encodings)
-        print(f'{threshold}')
+        print(f'Thershold: {threshold}')
 
         distances = face_recognition.face_distance(known_encodings, uploaded_enc)
         best_idx = np.argmin(distances)
         best_distance = distances[best_idx]
-        print(f'{distances}')
-        print(f'{user_list}')
+        # print(f'{distances}')
+        # print(f'{user_list}')
 
-        print(f'{best_distance}')
+        print(f'User encode: {best_distance}')
         if best_distance > threshold:
-            return JsonResponse({'status': 'error', 'message': 'Wajah tidak cocok (tidak terdaftar)'})
+            return JsonResponse({'status': 'error', 'message': 'Gagal mengenali wajah'})
 
         user = user_list[best_idx]
-        print(f'{user.name}')
+        print(f'Name: {user.name}')
         now = datetime.now()
         today = now.date()
 
