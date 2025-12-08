@@ -35,11 +35,11 @@
                   <img src="{{ pengajuan.photo.url }}" style="width:150px" alt="Surat Pengajuan Cuti">
                 </td>
                 <td>
-                  {% if pengajuan.status == 'approved' %}
+                  {% if pengajuan.status == 'Approved' %}
                     <span class="badge badge-primary"  style="font-size: 18px;">{{ pengajuan.status }}</span>
-                  {% elif pengajuan.status == 'rejected' %}
+                  {% elif pengajuan.status == 'Rejected' %}
                     <span class="badge badge-danger"  style="font-size: 18px;">{{ pengajuan.status }}</span>
-                  {% elif pengajuan.status == 'pending' %}
+                  {% elif pengajuan.status == 'Pending' or pengajuan.status == 'Divisi Approved' %}
                     <span class="badge badge-warning text-white" style="font-size: 18px;">{{ pengajuan.status }}</span>
                   {% else %}
                     <span class="badge badge-secondary"  style="font-size: 18px;">{{ pengajuan.status }}</span>
@@ -47,7 +47,7 @@
                 </td>
                 <td>{{ pengajuan.note }}</td>
                 <td>
-                {% if pengajuan.status == 'pending' %}
+                {% if pengajuan.status == 'Pending' %}
                   <a href="{% url 'edit_pengajuan_cuti' pengajuan.id %}" class="btn btn-sm btn-warning my-1"><i class="fa fa-edit"></i> Edit</a> |
                   <a href="javascript:void(0);" class="btn btn-sm btn-danger my-1 btn-hapus" data-url="{% url 'delete_pengajuan_cuti' pengajuan.id %}"><i class="fa fa-times"></i> Batal</a>
                 {% else %}

@@ -9,7 +9,7 @@
         <div class="card-tools">
             <button type="button" class="btn btn-tool text-primary mr-2"
                 data-card-widget="collapse">
-                <i class="fas fa-plus"></i>
+                <i class="fas fa-minus"></i>
             </button>
         </div>
       </div>
@@ -31,7 +31,7 @@
               {% for pengajuan in pengajuan_list %}
               <tr class="text-center">
                 <td>{{ pengajuan.nik.nik }}</td>
-                <td>{{ pengajuan.nik.name }}</td>
+                <td class="text-left">{{ pengajuan.nik.name }}</td>
                 <td>{{ pengajuan.leave_type.name }}</td>
                 <td>{{ pengajuan.start_date }} s.d. {{ pengajuan.end_date }}</td>
                 <td>
@@ -39,7 +39,7 @@
                     <span class="badge badge-primary"  style="font-size: 18px;">{{ pengajuan.status }}</span>
                   {% elif pengajuan.status == 'Rejected' %}
                     <span class="badge badge-danger"  style="font-size: 18px;">{{ pengajuan.status }}</span>
-                  {% elif pengajuan.status == 'Pending' %}
+                  {% elif pengajuan.status == 'Pending' or pengajuan.status == 'Divisi Approved' %}
                     <span class="badge badge-warning text-white" style="font-size: 18px;">{{ pengajuan.status }}</span>
                   {% else %}
                     <span class="badge badge-secondary"  style="font-size: 18px;">{{ pengajuan.status }}</span>
@@ -91,7 +91,7 @@
               {% for pengajuan in approval_list %}
               <tr class="text-center">
                 <td>{{ pengajuan.nik.nik }}</td>
-                <td>{{ pengajuan.nik.name }}</td>
+                <td class="text-left">{{ pengajuan.nik.name }}</td>
                 <td>{{ pengajuan.leave_type.name }}</td>
                 <td>{{ pengajuan.start_date }} s.d. {{ pengajuan.end_date }}</td>
                 <td>
@@ -99,7 +99,7 @@
                     <span class="badge badge-primary"  style="font-size: 18px;">{{ pengajuan.status }}</span>
                   {% elif pengajuan.status == 'Rejected' %}
                     <span class="badge badge-danger"  style="font-size: 18px;">{{ pengajuan.status }}</span>
-                  {% elif pengajuan.status == 'Pending' %}
+                  {% elif pengajuan.status == 'Pending' or pengajuan.status == 'Divisi Approved' %}
                     <span class="badge badge-warning text-white" style="font-size: 18px;">{{ pengajuan.status }}</span>
                   {% else %}
                     <span class="badge badge-secondary"  style="font-size: 18px;">{{ pengajuan.status }}</span>

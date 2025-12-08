@@ -831,28 +831,47 @@ def deleteCuti(request, id):
 
 
 @login_auth
-@superadmin_required
+@admin_required
 def persetujuan_cuti(request):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
     from django.utils.timezone import now
     current_year = now().year
 
-    pengajuan_list = LeaveRequests.objects.filter(status='pending', created_at__year=current_year)
+    if user.is_admin == 1:
+        status_filter = 'Pending'
+        status_exclude = ['Pending']
+        base_filter = {'nik__divisi': user.divisi}
 
-    approve_list = LeaveRequests.objects.exclude(status='pending').filter(created_at__year=current_year)
+    elif user.is_admin == 2:
+        status_filter = 'Divisi Approved'
+        status_exclude = ['Pending', 'Divisi Approved']
+        base_filter = {}
+
+    pengajuan_list = LeaveRequests.objects.filter(
+        status=status_filter,
+        created_at__year=current_year,
+        **base_filter
+    )
+
+    approve_list = LeaveRequests.objects.exclude(
+        status__in=status_exclude
+    ).filter(
+        created_at__year=current_year,
+        **base_filter
+    )
 
     context = {
-       'user': user,
-       'pengajuan_list': pengajuan_list,
-       'approval_list': approve_list,
-       'title': 'List Pengajuan Cuti Karyawan'
+        'user': user,
+        'pengajuan_list': pengajuan_list,
+        'approval_list': approve_list,
+        'title': 'List Pengajuan Cuti Karyawan'
     }
-
     return render(request, 'admin/cuti_persetujuan/index.html', context)
 
+
 @login_auth
-@superadmin_required
+@admin_required
 def detail_pengajuan(request, id):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
@@ -866,6 +885,9 @@ def detail_pengajuan(request, id):
 
         try:
             pengajuan = get_object_or_404(LeaveRequests, id=id)
+            
+            if user.is_admin == 1 and status == 'Approved':
+                status = 'Divisi Approved'
 
             pengajuan.start_date = start_date
             pengajuan.end_date = end_date
@@ -874,7 +896,7 @@ def detail_pengajuan(request, id):
 
             pengajuan.save()
 
-            if status == "Approved":
+            if user.is_admin == 2 and status == "Approved":
                 from datetime import datetime, timedelta
                 start = datetime.strptime(start_date, "%Y-%m-%d").date()
                 end = datetime.strptime(end_date, "%Y-%m-%d").date()
@@ -893,8 +915,7 @@ def detail_pengajuan(request, id):
 
                     sudah_ada_absen = InAbsences.objects.filter(
                         nik=pengajuan.nik,
-                        date_in__date=current,
-                        status_in="Cuti"
+                        date_in__date=current
                     ).exists()
 
                     if not sudah_ada_absen:
@@ -906,6 +927,16 @@ def detail_pengajuan(request, id):
                             status_out="Cuti",
                             schedule=cuti_schedule
                         )
+                    else:
+                        absence = get_object_or_404(InAbsences, nik=pengajuan.nik, date_in__date=current)
+                        try:
+                            absence.status_in="Cuti"
+                            absence.status_out="Cuti"
+                            absence.schedule = cuti_schedule
+                            absence.save()
+                        except Exception as e:
+                            messages.error(request, f'Gagal menyimpan data persetujuan pengajuan cuti. Error: {e}')
+                            return redirect('persetujuan_cuti')
 
                     sudah_ada_schedule = MappingSchedules.objects.filter(
                         nik=pengajuan.nik,
@@ -937,11 +968,12 @@ def detail_pengajuan(request, id):
             messages.error(request, f'Gagal menyimpan data persetujuan pengajuan cuti. Error: {e}')
             return redirect('persetujuan_cuti')
 
+    status = ['Pending', 'Approved', 'Rejected'] if user.is_admin == 1 else ['Divisi Approved', 'Approved', 'Rejected']
     context = {
        'user': user,
        'pengajuan': pengajuan,
        'title': 'Detail Pengajuan Cuti Karyawan',
-       'status': ['Pending', 'Approved', 'Rejected']
+       'status': status
     }
 
     return render(request, 'admin/cuti_persetujuan/detail.html', context)
