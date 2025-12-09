@@ -40,5 +40,6 @@ urlpatterns = [
     path('editKaryawan/<str:nik>', editKaryawan, name='editKaryawan'),
     path('deleteKaryawan/<str:nik>', deleteKaryawan, name='deleteKaryawan'),
 
-    path('err403/', err403, name='err403')
+    path('err403/', err403, name='err403'),
+    path('err404/', err404, name='err404')
 ]

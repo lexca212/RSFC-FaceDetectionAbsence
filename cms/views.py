@@ -1,6 +1,7 @@
 from django.contrib.auth.hashers import make_password, check_password
 from django.shortcuts import render, redirect , get_object_or_404
 from django.core.files.base import ContentFile
+from django.http import HttpResponseNotFound
 from django.core.paginator import Paginator
 from django.contrib import messages
 from django.db.models import Q
@@ -56,6 +57,11 @@ def logout(request):
 
 def err403(request):
     return render(request, 'admin/403.html')
+
+def err404(request, exception, template_name='admin/404.html'):
+    response = render(request, template_name)
+    response.status_code = 404
+    return response
 
 @login_auth 
 @admin_required

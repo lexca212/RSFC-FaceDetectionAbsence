@@ -16,18 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.shortcuts import render
-
-def not_found(request, exception):
-    return render(request, 'admin/404.html', status=404)
+from cms.views import err404 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    path('users/',include('app.urls')),
+    path('users/', include('app.urls')),
 
-    path('admins/',include('cms.urls')),
-
+    path('admins/', include('cms.urls')),
 ]
 
-handler404 = not_found
+handler404 = err404
