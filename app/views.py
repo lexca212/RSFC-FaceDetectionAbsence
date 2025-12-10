@@ -290,7 +290,7 @@ def pengajuan_cuti(request):
                         f"{leave_type_obj.default_quota} hari."
                     )
                 )
-                return redirect('pengajuan_cuti')
+                return redirect('/users/pengajuan_cuti')
 
         new_leave_request = LeaveRequests(
             nik=user,
@@ -306,7 +306,7 @@ def pengajuan_cuti(request):
         new_leave_request.save()
 
         messages.success(request, 'Pengajuan cuti berhasil diupload.')
-        return redirect('pengajuan_cuti')
+        return redirect('/users/pengajuan_cuti')
 
     cuti_list = MasterLeaves.objects.all()
     pengajuan_list = LeaveRequests.objects.filter(nik_id=user.nik)
@@ -354,11 +354,11 @@ def edit_pengajuan_cuti(request, id):
             pengajuan.save() 
 
             messages.success(request, 'Data perubahan pengajuan cuti berhasil diupload.')
-            return redirect('pengajuan_cuti') 
+            return redirect('/users/pengajuan_cuti') 
             
         except Exception as e:
             messages.error(request, f'Gagal mengupload perubahan data pengajuan cuti. Error: {e}')
-            return redirect('pengajuan_cuti')
+            return redirect('/users/pengajuan_cuti')
 
     context = {
        'user': user,
@@ -487,12 +487,12 @@ def profile(request, nik):
             detail_user.save()
 
             messages.success(request, 'Data Anda berhasil diupdate.')
-            return redirect('profile', nik=detail_user.nik)
+            return redirect('/users/profile', nik=detail_user.nik)
         
         except Exception as e:
             messages.error(request, f'Gagal mengupdate data Anda: {e}')
             
-            return redirect('profile', nik=detail_user.nik) 
+            return redirect('/users/profile', nik=detail_user.nik) 
 
     division_detail = None
     if detail_user.divisi:

@@ -56,12 +56,10 @@ def logout(request):
     return redirect('/admins/login')
 
 def err403(request):
-    return render(request, 'admin/403.html')
+    return render(request, 'admin/403.html', status=403)
 
 def err404(request, exception, template_name='admin/404.html'):
-    response = render(request, template_name)
-    response.status_code = 404
-    return response
+    return render(request, template_name, status=404)
 
 @login_auth 
 @admin_required
@@ -108,7 +106,7 @@ def addDivisi(request):
       for divisi in divisi_list:
           if divisi.id == divisi_id:
               messages.error(request, 'Divisi sudah ada.')
-              return redirect('/admins/addDivisi')
+              return redirect('/admins/divisi/add')
 
       # Create new data entry
       divisi = MasterDivisions(
@@ -118,7 +116,7 @@ def addDivisi(request):
       divisi.save()
 
       messages.success(request, 'Data divisi berhasil diupload.')
-      return redirect('/admins/divisi_master')
+      return redirect('/admins/divisi')
     
     context = {
       'user': user,
@@ -143,11 +141,11 @@ def editDivisi(request, id):
         divisi.save()
 
         messages.success(request, 'Data divisi berhasil diupdate.')
-        return redirect('/admins/divisi_master')
+        return redirect('/admins/divisi')
       
       except Exception as e:
         messages.error(request, f'Gagal mengupdate data divisi: {e}')
-        return redirect('/admins/divisi_master')
+        return redirect('/admins/divisi')
     
     divisi = get_object_or_404(MasterDivisions, id=id)
 
@@ -167,11 +165,11 @@ def deleteDivisi(request, id):
       divisi.delete()
 
       messages.success(request, 'Data divisi berhasil dihapus.')
-      return redirect('/admins/divisi_master')
+      return redirect('/admins/divisi')
     
     except Exception as e:
       messages.error(request, f'Gagal menghapus data divisi: {e}')
-      return redirect('/admins/divisi_master')
+      return redirect('/admins/divisi')
     
 @login_auth
 @admin_required
@@ -211,7 +209,7 @@ def addJadwal(request):
       jadwal.save()
 
       messages.success(request, 'Data jadwal berhasil diupload.')
-      return redirect('/admins/jadwal_master')
+      return redirect('/admins/jadwal')
     
     context = {
       'user': user,
@@ -240,11 +238,11 @@ def editJadwal(request, id):
         jadwal.save()
 
         messages.success(request, 'Data jadwal berhasil diupdate.')
-        return redirect('/admins/jadwal_master')
+        return redirect('/admins/jadwal')
       
       except Exception as e:
         messages.error(request, f'Gagal mengupdate data jadwal: {e}')
-        return redirect('/admins/jadwal_master')
+        return redirect('/admins/jadwal')
     
     jadwal = get_object_or_404(MasterSchedules, id=id)
 
@@ -264,11 +262,11 @@ def deleteJadwal(request, id):
       jadwal.delete()
 
       messages.success(request, 'Data jadwal berhasil dihapus.')
-      return redirect('/admins/jadwal_master')
+      return redirect('/admins/jadwal')
     
     except Exception as e:
       messages.error(request, f'Gagal menghapus data jadwal: {e}')
-      return redirect('/admins/jadwal_master')
+      return redirect('/admins/jadwal')
     
 @login_auth
 @admin_required
@@ -777,7 +775,7 @@ def addCuti(request):
       cuti.save()
 
       messages.success(request, 'Data cuti berhasil diupload.')
-      return redirect('/admins/cuti_master')
+      return redirect('/admins/cuti')
     
     context = {
       'user': user,
@@ -805,11 +803,11 @@ def editCuti(request, id):
         cuti.save()
 
         messages.success(request, 'Data cuti berhasil diupdate.')
-        return redirect('/admins/cuti_master')
+        return redirect('/admins/cuti')
       
       except Exception as e:
         messages.error(request, f'Gagal mengupdate data cuti: {e}')
-        return redirect('/admins/cuti_master')
+        return redirect('/admins/cuti')
     
     cuti = get_object_or_404(MasterLeaves, id=id)
 
@@ -829,11 +827,11 @@ def deleteCuti(request, id):
       cuti.delete()
 
       messages.success(request, 'Data cuti berhasil dihapus.')
-      return redirect('/admins/cuti_master')
+      return redirect('/admins/cuti')
     
     except Exception as e:
       messages.error(request, f'Gagal menghapus data cuti: {e}')
-      return redirect('/admins/cuti_master')
+      return redirect('/admins/cuti')
 
 
 @login_auth
@@ -942,7 +940,7 @@ def detail_pengajuan(request, id):
                             absence.save()
                         except Exception as e:
                             messages.error(request, f'Gagal menyimpan data persetujuan pengajuan cuti. Error: {e}')
-                            return redirect('persetujuan_cuti')
+                            return redirect('/admins/persetujuan_cuti')
 
                     sudah_ada_schedule = MappingSchedules.objects.filter(
                         nik=pengajuan.nik,
@@ -963,16 +961,16 @@ def detail_pengajuan(request, id):
                             schedule.save()
                         except Exception as e:
                             messages.error(request, f'Gagal menyimpan data persetujuan pengajuan cuti. Error: {e}')
-                            return redirect('persetujuan_cuti')
+                            return redirect('/admins/persetujuan_cuti')
 
                     current += timedelta(days=1)
 
             messages.success(request, 'Data persetujuan cuti berhasil disimpan.')
-            return redirect('persetujuan_cuti') 
+            return redirect('/admins/persetujuan_cuti') 
             
         except Exception as e:
             messages.error(request, f'Gagal menyimpan data persetujuan pengajuan cuti. Error: {e}')
-            return redirect('persetujuan_cuti')
+            return redirect('/admins/persetujuan_cuti')
 
     status = ['Pending', 'Approved', 'Rejected'] if user.is_admin == 1 else ['Divisi Approved', 'Approved', 'Rejected']
     context = {
@@ -1074,12 +1072,12 @@ def editKaryawan(request, nik):
             detail_user.save()
 
             messages.success(request, 'Data Karyawan berhasil diupdate.')
-            return redirect('karyawan')
+            return redirect('/admins/karyawan')
         
         except Exception as e:
             messages.error(request, f'Gagal mengupdate data Karyawan: {e}')
             
-            return redirect('editKaryawan', nik=detail_user.nik) 
+            return redirect('/admins/karyawan/edit', nik=detail_user.nik) 
 
     all_divisions = MasterDivisions.objects.all()
 
@@ -1108,11 +1106,11 @@ def deleteKaryawan(request, nik):
       user.delete()
 
       messages.success(request, 'Data karyawan berhasil dihapus.')
-      return redirect('karyawan')
+      return redirect('/admins/karyawan')
     
     except Exception as e:
       messages.error(request, f'Gagal menghapus data karyawan: {e}')
-      return redirect('karyawan')
+      return redirect('/admins/karyawan')
     
 
 
