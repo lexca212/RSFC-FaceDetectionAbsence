@@ -1,8 +1,8 @@
 from django.contrib.auth.hashers import make_password, check_password
 from django.shortcuts import render, redirect , get_object_or_404
 from django.core.files.base import ContentFile
-from django.http import HttpResponseNotFound
 from django.core.paginator import Paginator
+from django.http import JsonResponse
 from django.contrib import messages
 from django.db.models import Q
 from .decorators import *
@@ -296,8 +296,9 @@ def addUser(request):
                 encodings = face_recognition.face_encodings(loaded_image)
 
                 if len(encodings) == 0:
-                    messages.error(request, 'Wajah tidak terdeteksi dalam foto. Pendaftaran dibatalkan.')
-                    return redirect('/admins/addUser')
+                    # messages.error(request, 'Wajah tidak terdeteksi dalam foto. Pendaftaran dibatalkan.')
+                    # return redirect('/admins/addUser')
+                    return JsonResponse({'status': 'error', 'message': 'Wajah tidak terdeteksi dalam foto. Pendaftaran dibatalkan.' })
                 
                 face_enc = encodings[0] 
                 
@@ -314,18 +315,14 @@ def addUser(request):
                 )
                 user.save()
 
-                messages.success(request, 'Data karyawan berhasil diupload dan encoding wajah disimpan.')
-                return redirect('/admins/addUser')
+                return JsonResponse({'status': 'success', 'message': 'Data karyawan berhasil diupload dan encoding wajah disimpan.'})
             
             except Exception as e:
-                messages.error(request, f'Gagal mengupload data karyawan atau menghitung encoding: {e}')
                 print(f"Error detail: {e}") 
-                return redirect('/admins/addUser')
+                return JsonResponse({'status': 'error', 'message': 'Gagal mengupload data karyawan atau menghitung encoding: {e}' })
                 
         else:
-            messages.error(request, 'Foto tidak tersedia atau tidak valid.')
-
-        return redirect('/admins/addUser')
+            return JsonResponse({ 'status': 'error', 'message': 'Foto tidak tersedia atau tidak valid.' })
     
     divisi_list = MasterDivisions.objects.all()
     context = {

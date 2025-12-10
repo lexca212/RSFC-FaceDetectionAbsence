@@ -57,7 +57,12 @@ $(function () {
       type: 'POST',
       data: formData,
       success: function (response) {
-        toastr.success('Data karyawan berhasil diupload!');
+        if (response.status === 'success'){
+          toastr.success(response.message);
+        } else {
+          toastr.error(response.message);
+        }
+        console.log(response)
         $('form')[0].reset();
         photoPreview.style.display = 'none';
       },
