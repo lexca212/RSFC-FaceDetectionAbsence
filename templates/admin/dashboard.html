@@ -1,8 +1,237 @@
 {% extends 'layouts/layout.html' %}
 {% block content %}
-<div class="card shadow p-2">
-  <div class="card-body text-center">
-    <h1>Sementara Ngene Sek</h1>
-  </div>
+
+<style>
+.equal-card {
+    height: 500px;              /* tinggi card disamakan */
+    display: flex;
+    flex-direction: column;
+}
+
+.table-scroll {
+    flex: 1;                    /* isi penuh space tersisa */
+    overflow-y: auto;           /* scroll jika konten melebihi */
+}
+</style>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- CONTENT -->
+<div class="content">
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4 rounded">
+        <div class="container-fluid">
+            <span class="navbar-brand">Dashboard</span>
+            <div class="d-flex">
+                <span class="me-3">Admin</span>
+                <img src="https://via.placeholder.com/40" class="rounded-circle" alt="">
+            </div>
+        </div>
+    </nav>
+
+    <!-- STAT CARDS -->
+    <div class="row mb-4">
+
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="text-muted">Total Karyawan</h6>
+                <h3>{{ total_karyawan }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="text-muted">Total Jadwal Hari ini</h6>
+                <h3>{{ total_jadwal }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card shadow-sm border-0 bg-primary">
+            <div class="card-body ">
+                <h6 class="text-white">Hadir </h6>
+                <h3 class="text-white">{{ hadir_hari_ini }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card shadow-sm border-0 bg-secondary">
+            <div class="card-body">
+                <h6 class="text-white">Belum Hadir</h6>
+                <h3 class="text-white">{{ belum_hadir }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card shadow-sm border-0 bg-success">
+            <div class="card-body">
+                <h6 class="text-white">Tepat Waktu</h6>
+                <h3 class="text-white">{{ tepat_waktu_hari_ini }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card shadow-sm border-0 bg-danger">
+            <div class="card-body">
+                <h6 class="text-white">Terlambat</h6>
+                <h3 class="text-white">{{ terlamabt_hari_ini }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card shadow-sm border-0 bg-warning">
+            <div class="card-body">
+                <h6 class="text-white">Cuti</h6>
+                <h3 class="text-white">{{ cuti_hari_ini }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card shadow-sm border-0 bg-info">
+            <div class="card-body">
+                <h6 class="text-white">Libur</h6>
+                <h3 class="text-white">{{ libur_hari_ini }}</h3>
+            </div>
+        </div>
+    </div>
+
 </div>
+
+<!-- GRAFIK -->
+<div class="row">
+    <!-- BAR -->
+    {% comment %} <div class="col-md-8 mb-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h5>Grafik Kehadiran 7 Hari Terakhir</h5>
+                <canvas id="attendanceChart" height="140"></canvas>
+            </div>
+        </div>
+    </div> {% endcomment %}
+
+    <!-- PIE -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-0 equal-card">
+            <div class="card-body">
+                <h5>Statistik Hari Ini</h5>
+                <canvas id="todayChart" height="240"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8 mb-4">
+        <div class="card shadow-sm border-0 equal-card">
+            <div class="card-body d-flex flex-column">
+                <h5 class="mb-3">Presensi Hari Ini</h5>
+
+                <div class="table-responsive table-scroll">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>NIK</th>
+                                <th>Nama</th>
+                                <th>Jam Masuk</th>
+                                <th>Jam Pulang</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in presensi_hari_ini %}
+                            <tr>
+                                <td>{{ row.nik.nik }}</td>
+                                <td>{{ row.nik.name }}</td>
+
+                                <td>
+                                    {% if row.status_masuk in "Cuti Libur" %}
+                                        -
+                                    {% else %}
+                                        {{ row.schedule.start_time|default:"-" }}
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if row.status_masuk in "Cuti Libur" %}
+                                        -
+                                    {% else %}
+                                        {{ row.schedule.end_time|default:"-" }}
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <span class="
+                                        {% if row.status_masuk == 'Tepat Waktu' %}badge bg-success
+                                        {% elif row.status_masuk == 'Terlambat' %}badge bg-danger
+                                        {% elif row.status_masuk == 'Cuti' %}badge bg-warning
+                                        {% elif row.status_masuk == 'Libur' %}badge bg-info
+                                        {% else %}badge bg-secondary{% endif %}
+                                    ">
+                                    {% if row.status_masuk %}
+                                        {{ row.status_masuk }}
+                                    {% else %}
+                                        Belum Hadir
+                                    {% endif %}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">Tidak ada data.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TABLE -->
+
+
+</div>
+<!-- Bootstrap JS -->
+<script>
+    // Data bar chart (ambil dari Django)
+    {% comment %} const attendanceLabels = {{ labels_7_hari|safe }};
+    const attendanceData = {{ data_7_hari|safe }};
+
+    new Chart(document.getElementById('attendanceChart'), {
+        type: 'bar',
+        data: {
+            labels: attendanceLabels,
+            datasets: [{
+                label: 'Hadir',
+                data: attendanceData,
+                backgroundColor: '#0d6efd'
+            }]
+        },
+        options: { responsive: true } 
+    });{% endcomment %}
+
+    // Data pie chart (hari ini)
+    new Chart(document.getElementById('todayChart'), {
+        type: 'pie',
+        data: {
+            labels: ['Tepat Waktu', 'Terlambat', 'Cuti', 'Libur'],
+            datasets: [{
+                data: [{{ tepat_waktu_hari_ini }}, {{ terlamabt_hari_ini }}, {{ cuti_hari_ini }}, {{ libur_hari_ini }}],
+                backgroundColor: ['#28A745', '#DC3545', '#FFC107', '#17A2B8']
+            }]
+        },
+        options: { responsive: true }
+    });
+</script>
 {% endblock%}

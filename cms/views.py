@@ -4,6 +4,7 @@ from django.core.files.base import ContentFile
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.contrib import messages
+from django.utils import timezone
 from django.db.models import Q
 from .decorators import *
 from app.models import *
@@ -65,15 +66,84 @@ def err404(request, exception, template_name='admin/404.html'):
 @admin_required
 @superadmin_required
 def dashboard(request):
-    # del request.session['nik_id']
     user = get_object_or_404(Users, nik=request.session['nik_id'])
+    today = timezone.now().date()
+
+    total_karyawan = Users.objects.count()
+
+    total_jadwal = MappingSchedules.objects.filter(date=today).count()
+
+    hadir_hari_ini = InAbsences.objects.filter(
+        date_in__date=today
+    ).count()
+
+    belum_hadir = total_jadwal - hadir_hari_ini
+
+    tepat_waktu_hari_ini = InAbsences.objects.filter(
+        date_in__date=today,
+        status_in="Tepat Waktu"
+    ).count()
+
+    terlamabt_hari_ini = InAbsences.objects.filter(
+        date_in__date=today,
+        status_in="Terlambat"
+    ).count()
+    
+    cuti_hari_ini = InAbsences.objects.filter(
+        date_in__date=today,
+        status_in="Cuti"
+    ).count()
+    
+    libur_hari_ini = InAbsences.objects.filter(
+        date_in__date=today,
+        status_in="Libur"
+    ).count()
+
+    # Grafik 7 hari
+    labels_7_hari = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"]
+    data_7_hari = []
+
+    for i in range(7):
+        tanggal = today - timezone.timedelta(days=i)
+        jumlah = InAbsences.objects.filter(date_in__date=tanggal).count()
+        data_7_hari.append(jumlah)
+
+    data_7_hari.reverse()
+
+    from django.db.models import OuterRef, Subquery
+
+    # Tabel presensi hari ini
+    absence_subquery = (
+        InAbsences.objects
+        .filter(nik=OuterRef("nik"), date_in__date=today)
+        .values("status_in")[:1]
+    )
+
+    presensi_hari_ini = (
+        MappingSchedules.objects
+        .select_related("nik", "schedule")
+        .annotate(status_masuk=Subquery(absence_subquery))
+        .filter(date=today)
+        .order_by("nik__name")
+    )
 
     context = {
-      'user': user,
-      'title': 'Dashboard'
+        'user': user,
+        'title': 'Dahsboard Admin',
+        "total_jadwal": total_jadwal,
+        "tepat_waktu_hari_ini": tepat_waktu_hari_ini,
+        "terlamabt_hari_ini": terlamabt_hari_ini,
+        "cuti_hari_ini": cuti_hari_ini,
+        "libur_hari_ini": libur_hari_ini,
+        "total_karyawan": total_karyawan,
+        "hadir_hari_ini": hadir_hari_ini,
+        "belum_hadir": belum_hadir,
+        "labels_7_hari": labels_7_hari,
+        "data_7_hari": data_7_hari,
+        "presensi_hari_ini": presensi_hari_ini,
     }
 
-    return render(request, 'admin/dashboard.html', context)
+    return render(request, "admin/dashboard.html", context)
 
 @login_auth
 @admin_required
