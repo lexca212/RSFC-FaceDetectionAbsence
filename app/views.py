@@ -147,31 +147,6 @@ def absence(request):
         today = now.date()
 
         # -------------------------------
-        # CEK SUDAH FULL ABSEN HARI INI
-        # -------------------------------
-        if InAbsences.objects.filter(
-            nik=user,
-            date_in__date=today,
-            date_out__isnull=False
-        ).exists():
-
-            schedule_name = (
-                MappingSchedules.objects.filter(nik=user, date=today)
-                .values_list("schedule__name", flat=True)
-                .first()
-            )
-
-            msg_map = {
-                "Libur": "Tidak ada jadwal untuk hari ini. Libur... Boss",
-                "Cuti": "Tidak ada jadwal untuk hari ini. Katanya mau cuti !!"
-            }
-
-            return JsonResponse({
-                'status': 'error',
-                'message': msg_map.get(schedule_name, "Anda sudah absen pulang hari ini...")
-            })
-
-        # -------------------------------
         # CEK ABSEN IN TANPA OUT → ABSEN OUT
         # -------------------------------
         existing_absen = (
@@ -205,6 +180,32 @@ def absence(request):
                 'date': now.strftime('%Y-%m-%d'),
                 'time': now.strftime('%H:%M:%S'),
                 'minor_message': 'Hati-hati di Jalan 🛵'
+            })
+
+        
+        # -------------------------------
+        # CEK SUDAH FULL ABSEN HARI INI
+        # -------------------------------
+        if InAbsences.objects.filter(
+            nik=user,
+            date_in__date=today,
+            date_out__isnull=False
+        ).exists():
+
+            schedule_name = (
+                MappingSchedules.objects.filter(nik=user, date=today)
+                .values_list("schedule__name", flat=True)
+                .first()
+            )
+
+            msg_map = {
+                "Libur": "Tidak ada jadwal untuk hari ini. Libur... Boss",
+                "Cuti": "Tidak ada jadwal untuk hari ini. Katanya mau cuti !!"
+            }
+
+            return JsonResponse({
+                'status': 'error',
+                'message': msg_map.get(schedule_name, "Anda sudah absen pulang hari ini...")
             })
 
         # -------------------------------
