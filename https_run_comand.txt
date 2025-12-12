@@ -1,1 +1,3 @@
-py -m uvicorn core.asgi:application --host 0.0.0.0 --port 8000 --ssl-keyfile cert/192.168.70.72-key.pem --ssl-certfile cert/192.168.70.72.pem
+OLD: py -m uvicorn core.asgi:application --host 0.0.0.0 --port 8000 --ssl-keyfile cert/192.168.70.72-key.pem --ssl-certfile cert/192.168.70.72.pem
+
+NEW: uvicorn core.asgi:application --host 127.0.0.1 --port 8000
