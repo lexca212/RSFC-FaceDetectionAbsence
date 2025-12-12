@@ -156,9 +156,9 @@
             <td>{{ absen.nik.name }}</td>
             <td>{{ absen.schedule.name|default:"-" }}</td>
             <td>{{ absen.date_in|date:"d-m-Y H:i" }}</td>
-            <td {% if absen.status_in == 'Tepat Waktu' %} style="color:green;" {% elif absen.status_in == 'Terlambat' %} style="color: red;" {% elif absen.status_in == 'Cuti' %} style="color:yellow;" {% else %} style="color:gray;" {% endif %}>{{ absen.status_in }}</td>
+            <td {% if absen.status_in == 'Tepat Waktu' %} style="color:#28A745;" {% elif absen.status_in == 'Terlambat' %} style="color: #DC3545;" {% elif absen.status_in == 'Cuti' %} style="color:gray;" {% else %} style="color:gray;" {% endif %}>{{ absen.status_in }}</td>
             <td>{{ absen.date_out|date:"d-m-Y H:i"|default:"-" }}</td>
-            <td {% if absen.status_out == 'Tepat Waktu' %} style="color:green;" {% elif absen.status_out == 'Pulang Cepat' %} style="color: red;" {% elif absen.status_out == 'Cuti' %} style="color:yellow;" {% else %} style="color:gray;" {% endif %}>{{ absen.status_out }}</td>
+            <td {% if absen.status_out == 'Tepat Waktu' %} style="color:#28A745;" {% elif absen.status_out == 'Pulang Cepat' %} style="color: #DC3545;" {% elif absen.status_out == 'Cuti' %} style="color:gray;" {% else %} style="color:gray;" {% endif %}>{{ absen.status_out }}</td>
             <td>{{ absen.late_time|default:"-" }}</td>
             <td>{{ absen.total_work|default:"-" }}</td>
         </tr>
