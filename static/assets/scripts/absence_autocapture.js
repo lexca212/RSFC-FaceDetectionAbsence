@@ -28,6 +28,28 @@ function EAR(eye) {
   return (vertical1 + vertical2) / (2.0 * horizontal);
 }
 
+function cropFaceFromVideo(video, box) {
+  const cropWidth  = box.maxX - box.minX;
+  const cropHeight = box.maxY - box.minY;
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = cropWidth;
+  canvas.height = cropHeight;
+
+  const ctx = canvas.getContext('2d');
+
+  ctx.drawImage(
+    video,
+    box.minX, box.minY,        // source x,y
+    cropWidth, cropHeight,     // source w,h
+    0, 0,                      // dest x,y
+    cropWidth, cropHeight      // dest w,h
+  );
+
+  return canvas.toDataURL('image/jpeg', 0.9);
+}
+
+
 const LEFT_EYE_IDX = [33, 160, 158, 133, 153, 144];
 const RIGHT_EYE_IDX = [362, 385, 387, 263, 373, 380];
 
@@ -75,19 +97,24 @@ function drawLandmarks(landmarks, connections, boundingBox) {
   }
 }
 
+let captureInProgress = false;
+
 function autoCaptureAndSend() {
-  const now = Date.now();
-  if (now - lastCaptureAt < CAPTURE_COOLDOWN_MS) return;
-  lastCaptureAt = now;
+  if (captureInProgress) return;
 
-  const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  if (!window.latestBoundingBox) {
+    toastr.error("Wajah belum siap");
+    return;
+  }
 
-  const imageData = canvas.toDataURL('image/jpeg', 0.85);
-  photoInput.value = imageData;
+  captureInProgress = true;
+
+  const faceImageBase64 = cropFaceFromVideo(video, window.latestBoundingBox);
+  photoInput.value = faceImageBase64;
+
+  // const now = Date.now();
+  // if (now - lastCaptureAt < CAPTURE_COOLDOWN_MS) return;
+  // lastCaptureAt = now;
 
   toastr.success('Gambar wajah berhasil diambil (kedipan terdeteksi).');
 
@@ -102,6 +129,9 @@ function autoCaptureAndSend() {
     contentType: false,
     success: function(response) {
       if (response.status === 'success') {
+        lastCaptureAt = Date.now();
+        captureInProgress = false;
+        
         let content = `
           <div class="mt-3">
             <p class="mb-1">
@@ -194,18 +224,22 @@ faceMesh.onResults((results) => {
         maxY = Math.max(maxY, y);
     }
   
-    const margin = 10;
+    const margin = 20;
+
     const calculatedBox = {
-        minX: minX - margin,
-        minY: minY - margin,
-        maxX: maxX + margin,
-        maxY: maxY + margin
+      minX: Math.max(0, minX - margin),
+      minY: Math.max(0, minY - margin),
+      maxX: Math.min(overlay.width, maxX + margin),
+      maxY: Math.min(overlay.height, maxY + margin)
     };
+
 
     if (DRAW_LANDMARKS) {
         const connections = window.FaceMesh ? window.FaceMesh.FACEMESH_TESSELATION : [];
         drawLandmarks(landmarks, connections, calculatedBox);
     }
+
+    window.latestBoundingBox = calculatedBox;
 
     const leftEye = LEFT_EYE_IDX.map(i => ({x: landmarks[i].x, y: landmarks[i].y}));
     const rightEye = RIGHT_EYE_IDX.map(i => ({x: landmarks[i].x, y: landmarks[i].y}));

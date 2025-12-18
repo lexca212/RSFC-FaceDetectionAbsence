@@ -68,6 +68,9 @@ def absence(request):
         return render(request, 'user/absence.html')
 
     try:
+        # ======================================================
+        # 1. AMBIL & VALIDASI BASE64 FOTO (HASIL CROP FRONTEND)
+        # ======================================================
         photo_data = request.POST.get('photo')
         if not photo_data:
             return JsonResponse({'status': 'error', 'message': 'Foto tidak valid'})
@@ -76,37 +79,62 @@ def absence(request):
             format, imgstr = photo_data.split(';base64,')
             ext = format.split('/')[-1]
             img_bytes = base64.b64decode(imgstr)
-        except:
+        except Exception:
             return JsonResponse({'status': 'error', 'message': 'Format foto tidak valid'})
-        
-        # -----------------------------
-        # CEK GLARE SEBELUM PROCESSING
-        # -----------------------------
-        # is_glare, glare_msg = detect_glare(img_bytes)
-        # if is_glare:
-        #     return JsonResponse({
-        #         'status': 'error',
-        #         'message': f'Foto tidak valid: {glare_msg}'
-        #     })
 
-
-        temp_name = f"temp_photo.{ext}"
+        # ======================================================
+        # 2. SIMPAN FILE TEMPORARY (AMAN CONCURRENCY)
+        # ======================================================
+        import uuid
+        temp_name = f"temp_face_{uuid.uuid4().hex}.{ext}"
         temp_path = default_storage.save(temp_name, ContentFile(img_bytes))
         temp_full = default_storage.path(temp_path)
 
-        uploaded_img = face_recognition.load_image_file(temp_full)
-        uploaded_encs = face_recognition.face_encodings(uploaded_img)
+        # ======================================================
+        # 3. LOAD + PREPROCESS IMAGE (INI INTI PERBAIKAN)
+        # ======================================================
+        img = cv2.imread(temp_full)
+        if img is None:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Gagal membaca gambar wajah'
+            })
 
+        h, w, _ = img.shape
+        if h < 80 or w < 80:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Wajah terlalu kecil / terlalu jauh'
+            })
+
+        # Resize konsisten (WAJIB)
+        # img = cv2.resize(img, (160, 160))
+
+        # BGR → RGB
+        rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+        # ======================================================
+        # 4. FACE ENCODING
+        # ======================================================
+        uploaded_encs = face_recognition.face_encodings(rgb)
         if not uploaded_encs:
-            return JsonResponse({'status': 'error', 'message': 'Wajah tidak terdeteksi (Mungkin kurang tengah)'})
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Wajah tidak terdeteksi'
+            })
 
         uploaded_enc = uploaded_encs[0]
 
+        # ======================================================
+        # 5. LOAD CACHE ENCODING USER
+        # ======================================================
         cached_enc = cache.get("known_face_encodings")
         cached_users = cache.get("known_face_users")
 
         if cached_enc is None:
-            users = Users.objects.exclude(face_encoding=None).only("nik", "name", "face_encoding")
+            users = Users.objects.exclude(face_encoding=None).only(
+                "nik", "name", "face_encoding"
+            )
 
             known_encodings = []
             user_list = []
@@ -115,7 +143,7 @@ def absence(request):
                 try:
                     known_encodings.append(pickle.loads(u.face_encoding))
                     user_list.append(u)
-                except:
+                except Exception:
                     continue
 
             cache.set("known_face_encodings", known_encodings, 3600)
@@ -125,34 +153,43 @@ def absence(request):
             user_list = cached_users
 
         if not known_encodings:
-            return JsonResponse({'status': 'error', 'message': 'Tidak ada data wajah terdaftar.'})
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Tidak ada data wajah terdaftar'
+            })
 
-
+        # ======================================================
+        # 6. MATCHING
+        # ======================================================
         threshold = calculate_dynamic_threshold(known_encodings)
         print(f'Thershold: {threshold}')
-
         distances = face_recognition.face_distance(known_encodings, uploaded_enc)
+
         best_idx = np.argmin(distances)
         best_distance = distances[best_idx]
-        # print(f'{distances}')
-        # print(f'{user_list}')
-
         print(f'User encode: {best_distance}')
+
         if best_distance > threshold:
-            return JsonResponse({'status': 'error', 'message': 'Gagal mengenali wajah'})
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Gagal mengenali wajah'
+            })
 
         user = user_list[best_idx]
         print(f'Name: {user.name}')
+
+        # ======================================================
+        # 7. LOGIC ABSENSI 
+        # ======================================================
         now = datetime.now()
         today = now.date()
 
-        # -------------------------------
-        # CEK ABSEN IN TANPA OUT → ABSEN OUT
-        # -------------------------------
+        # ---------- ABSEN PULANG ----------
         existing_absen = (
             InAbsences.objects.filter(nik=user, date_out__isnull=True)
             .only("date_in", "schedule")
-            .order_by('-date_in').first()
+            .order_by('-date_in')
+            .first()
         )
 
         if existing_absen:
@@ -182,10 +219,7 @@ def absence(request):
                 'minor_message': 'Hati-hati di Jalan 🛵'
             })
 
-        
-        # -------------------------------
-        # CEK SUDAH FULL ABSEN HARI INI
-        # -------------------------------
+        # ---------- CEK SUDAH ABSEN HARI INI ----------
         if InAbsences.objects.filter(
             nik=user,
             date_in__date=today,
@@ -205,22 +239,25 @@ def absence(request):
 
             return JsonResponse({
                 'status': 'error',
-                'message': msg_map.get(schedule_name, "Anda sudah absen pulang hari ini...")
+                'message': msg_map.get(
+                    schedule_name,
+                    "Anda sudah absen pulang hari ini..."
+                )
             })
 
-        # -------------------------------
-        # ABSEN MASUK
-        # -------------------------------
+        # ---------- ABSEN MASUK ----------
         schedule_today = MappingSchedules.objects.filter(
             nik=user, date=today
         ).select_related("schedule").first()
 
         if not schedule_today or schedule_today.schedule.name == "Libur":
-            return JsonResponse({'status': 'error', 'message': 'Tidak ada jadwal untuk hari ini. Libur... Boss'})
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Tidak ada jadwal untuk hari ini. Libur... Boss'
+            })
 
         sched = schedule_today.schedule
         jadwal_in_today = datetime.combine(today, sched.start_time)
-
         status_in = "Tepat Waktu" if now <= jadwal_in_today else "Terlambat"
 
         InAbsences.objects.create(
@@ -243,7 +280,10 @@ def absence(request):
         })
 
     except Exception as e:
-        return JsonResponse({'status': 'error', 'message': f'Error: {e}'})
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error: {str(e)}'
+        })
 
     finally:
         if 'temp_path' in locals():
