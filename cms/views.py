@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect , get_object_or_404
 from django.core.files.base import ContentFile
 from django.core.paginator import Paginator
 from django.http import JsonResponse
+from django.core.cache import cache
 from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q
@@ -384,6 +385,9 @@ def addUser(request):
                     face_encoding=serialized_encoding 
                 )
                 user.save()
+
+                cache.delete("known_face_encodings")
+                cache.delete("known_face_users")
 
                 return JsonResponse({'status': 'success', 'message': 'Data karyawan berhasil diupload dan encoding wajah disimpan.'})
             
