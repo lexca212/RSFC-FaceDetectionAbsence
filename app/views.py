@@ -17,6 +17,7 @@ import numpy as np
 import calendar
 import base64
 import pickle
+import pytz
 import cv2
 import io
 
@@ -69,7 +70,7 @@ def absence(request):
 
     try:
         # ======================================================
-        # 1. AMBIL & VALIDASI BASE64 FOTO (HASIL CROP FRONTEND)
+        # 1. AMBIL & VALIDASI BASE64 FOTO
         # ======================================================
         photo_data = request.POST.get('photo')
         if not photo_data:
@@ -83,7 +84,7 @@ def absence(request):
             return JsonResponse({'status': 'error', 'message': 'Format foto tidak valid'})
 
         # ======================================================
-        # 2. SIMPAN FILE TEMPORARY (AMAN CONCURRENCY)
+        # 2. SIMPAN FILE TEMPORARY 
         # ======================================================
         import uuid
         temp_name = f"temp_face_{uuid.uuid4().hex}.{ext}"
@@ -91,7 +92,7 @@ def absence(request):
         temp_full = default_storage.path(temp_path)
 
         # ======================================================
-        # 3. LOAD + PREPROCESS IMAGE (INI INTI PERBAIKAN)
+        # 3. LOAD + PREPROCESS IMAGE
         # ======================================================
         img = cv2.imread(temp_full)
         if img is None:
@@ -169,7 +170,7 @@ def absence(request):
         best_distance = distances[best_idx]
         print(f'User encode: {best_distance}')
 
-        if best_distance > threshold:
+        if best_distance > 0.55:
             return JsonResponse({
                 'status': 'error',
                 'message': 'Gagal mengenali wajah'
@@ -181,8 +182,11 @@ def absence(request):
         # ======================================================
         # 7. LOGIC ABSENSI 
         # ======================================================
-        now = datetime.now()
+        from django.utils import timezone
+
+        now = timezone.localtime(timezone.now())
         today = now.date()
+        tz_jakarta = pytz.timezone('Asia/Jakarta')
 
         # ---------- ABSEN PULANG ----------
         existing_absen = (
@@ -196,8 +200,9 @@ def absence(request):
             sched = existing_absen.schedule
             date_in_day = existing_absen.date_in.date()
 
-            jadwal_in = datetime.combine(date_in_day, sched.start_time)
-            jadwal_out = datetime.combine(date_in_day, sched.end_time)
+            jadwal_in = timezone.make_aware(datetime.combine(date_in_day, sched.start_time), tz_jakarta)
+            jadwal_out = timezone.make_aware(datetime.combine(date_in_day, sched.end_time), tz_jakarta)
+            
             if jadwal_out < jadwal_in:
                 jadwal_out += timedelta(days=1)
 
@@ -257,7 +262,7 @@ def absence(request):
             })
 
         sched = schedule_today.schedule
-        jadwal_in_today = datetime.combine(today, sched.start_time)
+        jadwal_in_today = timezone.make_aware(datetime.combine(today, sched.start_time), tz_jakarta)
         status_in = "Tepat Waktu" if now <= jadwal_in_today else "Terlambat"
 
         InAbsences.objects.create(
