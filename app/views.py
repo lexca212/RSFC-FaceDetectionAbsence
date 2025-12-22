@@ -183,6 +183,7 @@ def absence(request):
         # 7. LOGIC ABSENSI 
         # ======================================================
         from django.utils import timezone
+        from datetime import time
 
         now = timezone.localtime(timezone.now())
         today = now.date()
@@ -223,11 +224,14 @@ def absence(request):
                 'time': now.strftime('%H:%M:%S'),
                 'minor_message': 'Hati-hati di Jalan 🛵'
             })
+        
+        start_of_day = timezone.make_aware(datetime.combine(today, time.min))
+        end_of_day = timezone.make_aware(datetime.combine(today, time.max)) 
 
         # ---------- CEK SUDAH ABSEN HARI INI ----------
         if InAbsences.objects.filter(
             nik=user,
-            date_in__date=today,
+            date_in__range=(start_of_day, end_of_day),
             date_out__isnull=False
         ).exists():
 
