@@ -991,7 +991,7 @@ def persetujuan_cuti(request):
     if user.is_admin == 1:
         status_filter = 'Pending'
         status_exclude = ['Pending']
-        base_filter = {'nik__divisi': user.divisi}
+        base_filter = {'user_target': user}
 
     elif user.is_admin == 2:
         status_filter = 'Divisi Approved'
