@@ -132,6 +132,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 <p>Persetujuan Cuti</p>
               </a>
             </li>
+            {% if user.is_admin == 1 %}
+            <li class="nav-item">
+              <a href="{% url 'jadwal_master' %}" class="nav-link">
+                <i class="fa fa-fw fa-clock nav-icon"></i>
+                <p>Master jadwal</p>
+              </a>
+            </li>
+            {% endif %}
             {% endif %}
           </ul>
         </nav>
@@ -159,14 +167,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 </p>
               </a>
             </li>
-            <li class="nav-item">
+            {% comment %} <li class="nav-item">
               <a href="{% url 'absence' %}" class="nav-link ">
                 <i class="fa fa-fw fa-clock nav-icon"></i>
                 <p>
                     Masuk Presensi
                 </p>
               </a>
-            </li>
+            </li> {% endcomment %}
             <li class="nav-item">
               <a href="{% url 'pengajuan_cuti' %}" class="nav-link ">
                 <i class="nav-icon fas fa-user-times"></i>

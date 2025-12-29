@@ -244,7 +244,6 @@ def deleteDivisi(request, id):
     
 @login_auth
 @admin_required
-@superadmin_required
 def jadwal_master(request):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
@@ -260,7 +259,6 @@ def jadwal_master(request):
 
 @login_auth
 @admin_required
-@superadmin_required
 def addJadwal(request):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
@@ -290,7 +288,6 @@ def addJadwal(request):
 
 @login_auth
 @admin_required
-@superadmin_required
 def editJadwal(request, id):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
 
@@ -692,6 +689,9 @@ def update_jadwal(request):
                             }
                         )
 
+                    if shift.name.upper() == "-":
+                        mapping.delete()
+
                     # ========= UPDATE / CREATE MAPPING =========
                     if mapping:
                         mapping.schedule = shift
@@ -708,9 +708,9 @@ def update_jadwal(request):
                 # ===============================
                 # JIKA SHIFT DIKOSONGKAN
                 # ===============================
-                else:
-                    if mapping:
-                        mapping.delete()
+                # else:
+                #     if mapping:
+                #         mapping.delete()
 
     messages.success(request, "Jadwal karyawan berhasil diperbarui.")
     return redirect('/admins/mapping_jadwal')
