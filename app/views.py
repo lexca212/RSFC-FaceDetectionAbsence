@@ -179,7 +179,7 @@ def absence(request):
         if best_distance > 0.4:
             return JsonResponse({
                 'status': 'error',
-                'message': 'Gagal mengenali wajah, coba lagi ya...'
+                'message': 'Gagal mengenali wajah'
             })
 
         user = user_list[best_idx]
@@ -197,9 +197,51 @@ def absence(request):
         start_of_day = timezone.make_aware(datetime.combine(today, time.min), tz_jakarta)
         end_of_day = timezone.make_aware(datetime.combine(today, time.max), tz_jakarta)
 
+        # ------------------------------------------------------
+        # CEK JADWAL & STATUS (Libur/Cuti/Tidak Ada)
+        # ------------------------------------------------------
+        jadwal_list = MappingSchedules.objects.filter(
+            nik=user,
+            date=today
+        ).select_related("schedule").order_by("shift_order")
+
+        if not jadwal_list.exists():
+            return JsonResponse({'status': 'error', 'message': 'Tidak ada jadwal hari ini. Hubungi PJ/PIC jika ini sebuah kesalahan.'})
+
+        first_schedule_name = jadwal_list[0].schedule.name
+        msg_map = {
+            "Libur": "Tidak ada jadwal untuk hari ini. Libur... Boss",
+            "Cuti": "Tidak ada jadwal untuk hari ini. Katanya mau cuti !!"
+        }
+
+        if first_schedule_name in msg_map:
+            return JsonResponse({
+                'status': 'error',
+                'message': msg_map[first_schedule_name]
+            })
+        
+        # ================================
+        # AMBIL SEMUA JADWAL HARI INI
+        # ================================
+        jadwal_list = MappingSchedules.objects.filter(
+            nik=user,
+            date=today
+        ).select_related("schedule").order_by("shift_order")
+
+        if not jadwal_list.exists():
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Tidak ada jadwal hari ini'
+            })
+
         # ================================
         # ABSEN PULANG (SHIFT AKTIF)
         # ================================
+        # existing_absen = InAbsences.objects.filter(
+        #     nik=user,
+        #     date_in__range=(start_of_day, end_of_day),
+        #     date_out__isnull=False
+        # ).exists()
         existing_absen = (
             InAbsences.objects.filter(nik=user, date_out__isnull=True)
             .only("date_in", "schedule")
@@ -225,8 +267,6 @@ def absence(request):
 
             time = MasterSchedules.objects.get(id=existing_absen.schedule.id)
 
-            print(f'Absen pulang shift {existing_absen.shift_order} - {existing_absen.start_time}')
-
             return JsonResponse({
                 'status': 'success',
                 'type': 'Pulang',
@@ -238,31 +278,6 @@ def absence(request):
                 'date': now.strftime('%Y-%m-%d'),
                 'time': now.strftime('%H:%M:%S'),
                 'minor_message': 'Hati-hati di Jalan 🛵'
-            })
-
-        # ================================
-        # CEK JADWAL & STATUS (SHIFT)
-        # ================================-
-        jadwal_list = MappingSchedules.objects.filter(
-            nik=user,
-            date=today
-        ).select_related("schedule").order_by("shift_order")
-
-        if not jadwal_list.exists():
-            print(f'Absen Belum di mapping')
-            return JsonResponse({'status': 'error', 'message': f'Hari ini tidak ada jadwal untuk {user.name}. Hubungi PJ/PIC jika ini sebuah kesalahan.'})
-
-        first_schedule_name = jadwal_list[0].schedule.name
-        msg_map = {
-            "Libur": f'{user.name}, hari ini anda libur. Tidak perlu absen ya!',
-            "Cuti": f'{user.name}, hari ini anda cuti. Tidak perlu absen ya!'
-        }
-
-        if first_schedule_name in msg_map:
-            print(f'Absen Libur/Cuti: {first_schedule_name}')
-            return JsonResponse({
-                'status': 'error',
-                'message': msg_map[first_schedule_name]
             })
 
         # ================================
@@ -293,7 +308,7 @@ def absence(request):
                     schedule=sched,
                     shift_order=jadwal.shift_order
                 )
-                print(f'Absen masuk shift {jadwal.shift_order} - {sched.start_time}')
+
                 return JsonResponse({
                     'status': 'success',
                     'type': 'Masuk',
@@ -310,10 +325,9 @@ def absence(request):
         # ================================
         # SEMUA SHIFT SELESAI
         # ================================
-        print(f'Semua shift sudah absen')
         return JsonResponse({
             'status': 'error',
-            'message': f'{user.name}, Anda sudah absen pulang untuk semua shift hari ini.'
+            'message': 'Anda sudah absen pulang untuk semua shift hari ini.'
         })
 
     except Exception as e:
