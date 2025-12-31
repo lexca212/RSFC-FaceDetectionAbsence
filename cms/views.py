@@ -68,35 +68,49 @@ def err404(request, exception, template_name='admin/404.html'):
 @superadmin_required
 def dashboard(request):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
+    from datetime import datetime, time
+    from django.utils import timezone
+    
     today = timezone.now().date()
+
+    start = timezone.make_aware(
+        datetime.combine(today, time.min)
+    )
+
+    end = timezone.make_aware(
+        datetime.combine(today, time.max)
+    )
+
+    print( start, end)
 
     total_karyawan = Users.objects.count()
 
     total_jadwal = MappingSchedules.objects.filter(date=today).count()
 
     hadir_hari_ini = InAbsences.objects.filter(
-        date_in__date=today
+        date_in__range=(start, end),
+        status_in__in=["Tepat Waktu", "Terlambat"]
     ).count()
 
     belum_hadir = total_jadwal - hadir_hari_ini
 
     tepat_waktu_hari_ini = InAbsences.objects.filter(
-        date_in__date=today,
+        date_in__range=(start, end),
         status_in="Tepat Waktu"
     ).count()
 
     terlamabt_hari_ini = InAbsences.objects.filter(
-        date_in__date=today,
+        date_in__range=(start, end),
         status_in="Terlambat"
     ).count()
     
     cuti_hari_ini = InAbsences.objects.filter(
-        date_in__date=today,
+        date_in__range=(start, end),
         status_in="Cuti"
     ).count()
     
     libur_hari_ini = InAbsences.objects.filter(
-        date_in__date=today,
+        date_in__range=(start, end),
         status_in="Libur"
     ).count()
 
@@ -116,7 +130,11 @@ def dashboard(request):
     # Tabel presensi hari ini
     absence_subquery = (
         InAbsences.objects
-        .filter(nik=OuterRef("nik"), date_in__date=today)
+        .filter(
+            nik=OuterRef("nik"),
+            schedule=OuterRef("schedule"),
+            date_in__range=(start, end)
+        )
         .values("status_in")[:1]
     )
 
@@ -994,12 +1012,12 @@ def persetujuan_cuti(request):
         base_filter = {'user_target': user}
 
     elif user.is_admin == 2:
-        status_filter = 'Divisi Approved'
+        status_filter = ['Pending', 'Divisi Approved']
         status_exclude = ['Pending', 'Divisi Approved']
-        base_filter = {}
+        base_filter = {'user_target': user}
 
     pengajuan_list = LeaveRequests.objects.filter(
-        status=status_filter,
+        status__in=status_filter,
         created_at__year=current_year,
         **base_filter
     )
@@ -1007,8 +1025,7 @@ def persetujuan_cuti(request):
     approve_list = LeaveRequests.objects.exclude(
         status__in=status_exclude
     ).filter(
-        created_at__year=current_year,
-        **base_filter
+        created_at__year=current_year
     )
 
     context = {
