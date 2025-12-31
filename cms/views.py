@@ -69,7 +69,6 @@ def err404(request, exception, template_name='admin/404.html'):
 def dashboard(request):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
     from datetime import datetime, time
-    from django.utils import timezone
     
     today = timezone.now().date()
 
@@ -533,9 +532,6 @@ def save_jadwal(request):
         return redirect('/admins/mapping_jadwal')
 
     from datetime import datetime, time
-    from django.utils import timezone
-    import calendar
-    from django.contrib import messages
 
     bulan = int(request.POST['bulan'])
     tahun = int(request.POST['tahun'])
@@ -658,10 +654,7 @@ def update_jadwal(request):
     if request.method != "POST":
         return redirect('/admins/mapping_jadwal')
 
-    import calendar
     from datetime import date, datetime, time
-    from django.utils import timezone
-    from django.contrib import messages
 
     bulan = int(request.POST['bulan'])
     tahun = int(request.POST['tahun'])
@@ -697,7 +690,7 @@ def update_jadwal(request):
                     if shift.name.upper() == "LIBUR":
                         InAbsences.objects.get_or_create(
                             nik=user,
-                            date_in__date=local_date,
+                            date_in=safe_datetime,
                             defaults={
                                 "date_in": safe_datetime,
                                 "date_out": safe_datetime,
@@ -1007,7 +1000,7 @@ def persetujuan_cuti(request):
     current_year = now().year
 
     if user.is_admin == 1:
-        status_filter = 'Pending'
+        status_filter = ['Pending']
         status_exclude = ['Pending']
         base_filter = {'user_target': user}
 
@@ -1018,14 +1011,11 @@ def persetujuan_cuti(request):
 
     pengajuan_list = LeaveRequests.objects.filter(
         status__in=status_filter,
-        created_at__year=current_year,
         **base_filter
     )
 
     approve_list = LeaveRequests.objects.exclude(
         status__in=status_exclude
-    ).filter(
-        created_at__year=current_year
     )
 
     context = {
