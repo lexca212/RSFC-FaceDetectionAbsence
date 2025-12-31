@@ -614,12 +614,12 @@ def profile(request, nik):
             detail_user.save()
 
             messages.success(request, 'Data Anda berhasil diupdate.')
-            return redirect('/users/profile', nik=detail_user.nik)
+            return redirect('profile', nik=user.nik)
         
         except Exception as e:
             messages.error(request, f'Gagal mengupdate data Anda: {e}')
             
-            return redirect('/users/profile', nik=detail_user.nik) 
+            return redirect('profile', nik=user.nik) 
 
     division_detail = None
     if detail_user.divisi:
