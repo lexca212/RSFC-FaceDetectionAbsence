@@ -684,7 +684,10 @@ def update_jadwal(request):
 
                 if shift_id:
                     shift = MasterSchedules.objects.filter(id=shift_id).first()
-                    if not shift:
+                    if not shift_id or shift_id == "-":
+                        if mapping:
+                            mapping.delete()
+                            print(f"Mapping dihapus untuk {user.name} tgl {local_date}")
                         continue
 
                     if shift.name.upper() == "LIBUR":
@@ -859,11 +862,12 @@ def absen(request, divisi_id):
 
 def _hitung_absen(absen):
     from datetime import datetime, timedelta
+    from django.utils import timezone
 
     absen.late_minutes = 0
-    absen.late_time = None
+    absen.late_time = "00:00:00"
     absen.total_work_minutes = 0
-    absen.total_work = None
+    absen.total_work = "00:00:00"
 
     if absen.schedule and absen.schedule.id in ('CUTI', 'LIBUR'):
         absen.total_work = "00:00:00"
@@ -879,6 +883,9 @@ def _hitung_absen(absen):
         if diff > 0:
             absen.late_minutes = int(diff // 60)
             absen.late_time = str(timedelta(minutes=absen.late_minutes))
+        else:
+            absen.late_minutes = 0
+            absen.late_time = "0:00:00"
 
     if absen.date_out:
         start_work = absen.date_in

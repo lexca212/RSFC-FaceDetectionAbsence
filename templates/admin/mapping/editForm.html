@@ -86,7 +86,7 @@
                             <select class="form-control form-control-sm mb-1"
                                     name="shift_{{ user.nik }}_{{ tgl }}_1">
 
-                                <option value="-" disabled {% if not data_hari %}selected{% endif %}>
+                                <option value="-" {% if not data_hari %}selected{% endif %}>
                                     -
                                 </option>
 
