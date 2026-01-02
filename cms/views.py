@@ -862,30 +862,29 @@ def absen(request, divisi_id):
 
 def _hitung_absen(absen):
     from datetime import datetime, timedelta
-    from django.utils import timezone
-
+    import pytz
+    
+    tz_jakarta = pytz.timezone('Asia/Jakarta')
+    local_date_in = absen.date_in.astimezone(tz_jakarta)
+    
     absen.late_minutes = 0
     absen.late_time = "00:00:00"
     absen.total_work_minutes = 0
     absen.total_work = "00:00:00"
 
-    if absen.schedule and absen.schedule.id in ('CUTI', 'LIBUR'):
-        absen.total_work = "00:00:00"
-        absen.total_work_minutes = 0
-        return
+    if absen.schedule and absen.schedule.id in ('LIBUR', 'CUTI') or \
+       getattr(absen, 'status_in', '').lower() == 'libur':
+        return 
 
     if absen.schedule and absen.schedule.start_time:
-        shift_start = timezone.make_aware(
-            datetime.combine(absen.date_in.date(), absen.schedule.start_time)
-        )
+        naive_shift_start = datetime.combine(local_date_in.date(), absen.schedule.start_time)
+        shift_start = tz_jakarta.localize(naive_shift_start)
 
-        diff = (absen.date_in - shift_start).total_seconds()
-        if diff > 0:
-            absen.late_minutes = int(diff // 60)
+        diff_seconds = (local_date_in - shift_start).total_seconds()
+        
+        if diff_seconds > 0:
+            absen.late_minutes = int(diff_seconds // 60)
             absen.late_time = str(timedelta(minutes=absen.late_minutes))
-        else:
-            absen.late_minutes = 0
-            absen.late_time = "0:00:00"
 
     if absen.date_out:
         start_work = absen.date_in
