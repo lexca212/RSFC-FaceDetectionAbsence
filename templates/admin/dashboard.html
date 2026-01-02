@@ -225,10 +225,10 @@
     new Chart(document.getElementById('todayChart'), {
         type: 'pie',
         data: {
-            labels: ['Tepat Waktu', 'Terlambat', 'Cuti', 'Libur'],
+            labels: ['Tepat Waktu', 'Terlambat', 'Cuti', 'Libur', 'Belum Hadir'],
             datasets: [{
-                data: [{{ tepat_waktu_hari_ini }}, {{ terlamabt_hari_ini }}, {{ cuti_hari_ini }}, {{ libur_hari_ini }}],
-                backgroundColor: ['#28A745', '#DC3545', '#FFC107', '#17A2B8']
+                data: [{{ tepat_waktu_hari_ini }}, {{ terlamabt_hari_ini }}, {{ cuti_hari_ini }}, {{ libur_hari_ini }}, {{ belum_hadir }}],
+                backgroundColor: ['#28A745', '#DC3545', '#FFC107', '#17A2B8', '#6C757D']
             }]
         },
         options: { responsive: true }

@@ -91,8 +91,6 @@ def dashboard(request):
         status_in__in=["Tepat Waktu", "Terlambat"]
     ).count()
 
-    belum_hadir = total_jadwal - hadir_hari_ini
-
     tepat_waktu_hari_ini = InAbsences.objects.filter(
         date_in__range=(start, end),
         status_in="Tepat Waktu"
@@ -112,6 +110,8 @@ def dashboard(request):
         date_in__range=(start, end),
         status_in="Libur"
     ).count()
+
+    belum_hadir = total_jadwal - hadir_hari_ini - libur_hari_ini
 
     # Grafik 7 hari
     labels_7_hari = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"]
@@ -1005,9 +1005,9 @@ def persetujuan_cuti(request):
         base_filter = {'user_target': user}
 
     elif user.is_admin == 2:
-        status_filter = ['Pending', 'Divisi Approved']
+        status_filter = ['Divisi Approved']
         status_exclude = ['Pending', 'Divisi Approved']
-        base_filter = {'user_target': user}
+        base_filter = {}
 
     pengajuan_list = LeaveRequests.objects.filter(
         status__in=status_filter,
@@ -1016,6 +1016,8 @@ def persetujuan_cuti(request):
 
     approve_list = LeaveRequests.objects.exclude(
         status__in=status_exclude
+    ).filter(
+        **base_filter
     )
 
     context = {

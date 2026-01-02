@@ -225,7 +225,7 @@ def absence(request):
 
             time = MasterSchedules.objects.get(id=existing_absen.schedule.id)
 
-            print(f'Absen pulang shift {existing_absen.shift_order} - {existing_absen.start_time}')
+            print(f'Absen pulang shift {existing_absen.shift_order} - {time.start_time}')
 
             return JsonResponse({
                 'status': 'success',
