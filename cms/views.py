@@ -344,6 +344,11 @@ def editJadwal(request, id):
 def deleteJadwal(request, id):
     try:
       jadwal = get_object_or_404(MasterSchedules, id=id)
+
+      if id == 'CUTI' or id == 'LIBUR':
+          messages.error(request, 'Jadwal ini tidak dapat dihapus.')
+          return redirect('/admins/jadwal')
+      
       jadwal.delete()
 
       messages.success(request, 'Data jadwal berhasil dihapus.')

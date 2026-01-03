@@ -26,6 +26,9 @@
                 <td class="col-3 text-left">{{ jadwal.name }}</td>
                 <td class="col-2">{{ jadwal.start_time|time:"H:i:s" }}</td>
                 <td class="col-2">{{ jadwal.end_time|time:"H:i:s" }}</td>
+                {% if jadwal.id == 'CUTI' or jadwal.id == 'LIBUR' %}
+                <td class="col-2"><span class="badge badge-danger">No Action</span></td>
+                {% else %}
                 <td class="col-2">
                   <a href="{% url 'editJadwal' jadwal.id %}" class="btn btn-warning btn-sm"><i class="fa fa-edit"></i> Edit</a>
                   |
@@ -33,6 +36,7 @@
                     <i class="fa fa-trash"></i> Hapus
                   </a>
                 </td>
+                {% endif %}
               </tr>
               {% endfor %}
               {% else %}
