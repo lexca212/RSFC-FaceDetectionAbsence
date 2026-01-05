@@ -638,4 +638,182 @@ def profile(request, nik):
 
     return render(request, 'user/profile/index.html', context)
 
+@login_auth
+def pengajuan_izin(request):
+    user = get_object_or_404(Users, nik=request.session.get('nik_id'))
 
+    if request.method == 'POST':
+        permission_type_id = request.POST.get('izin')
+        start_date_str = request.POST.get('start_date')
+        end_date_str = request.POST.get('end_date')
+        reason = request.POST.get('reason')
+        boss_nik = request.POST.get('boss')
+        photo_file = request.FILES.get('photo')
+
+        permission_type = get_object_or_404(MasterPermission, id=permission_type_id)
+        boss_obj = get_object_or_404(Users, nik=boss_nik)
+
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+
+        from django.utils.html import format_html
+
+        if permission_type.max_days and permission_type.max_days > 0:
+            end_date = start_date + timedelta(days=permission_type.max_days - 1)
+        else:
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+
+        if end_date < start_date:
+            messages.error(request, "Tanggal selesai tidak valid.")
+            return redirect('/users/pengajuan_izin')
+
+        if permission_type.is_requires_attachment and not photo_file:
+            messages.error(
+                request,
+                format_html(
+                    "Izin {} memerlukan lampiran foto.",
+                    permission_type.name
+                )
+            )
+            return redirect('/users/pengajuan_izin')
+
+        # from django.db.models import Q
+        if permission_type.max_per_month is not None and permission_type.max_per_month > 0:
+            pengajuan_bulan_ini = PermissionRequests.objects.filter(
+                nik=user,
+                permission_type=permission_type,
+                start_date__year=start_date.year, start_date__month=start_date.month
+            # # ).filter(
+            #     Q(start_date__year=start_date.year, start_date__month=start_date.month) |
+            #     Q(end_date__year=start_date.year, end_date__month=start_date.month) |
+            #     Q(start_date__lt=start_date, end_date__gt=start_date)
+            ).count()
+
+            if pengajuan_bulan_ini >= permission_type.max_per_month:
+                messages.error(
+                    request,
+                    format_html(
+                        "Izin {} hanya dapat diajukan {} kali per bulan.",
+                        permission_type.name,
+                        permission_type.max_per_month
+                    )
+                )
+                return redirect('/users/pengajuan_izin')
+
+        PermissionRequests.objects.create(
+            nik=user,
+            permission_type=permission_type,
+            start_date=start_date,
+            end_date=end_date,
+            reason=reason,
+            user_target=boss_obj,
+            photo=photo_file
+        )
+
+        messages.success(
+            request,
+            format_html(
+                "Pengajuan izin {} berhasil dikirim.",
+                permission_type.name
+            )
+        )
+        return redirect('/users/pengajuan_izin')
+
+    context = {
+        'user': user,
+        'izin_list': MasterPermission.objects.all(),
+        'boss_list': Users.objects.filter(is_admin__in=[1, 2]),
+        'pengajuan_list': PermissionRequests.objects.filter(nik=user).order_by('-created_at'),
+        'title': 'Pengajuan Izin'
+    }
+
+    return render(request, 'user/izin/index.html', context)
+
+@login_auth
+def edit_pengajuan_izin(request, id):
+    user = get_object_or_404(Users, nik=request.session.get('nik_id'))
+
+    pengajuan = get_object_or_404(
+        PermissionRequests,
+        nik=user,
+        id=id
+    )
+
+    if request.method == 'POST':
+        permission_type_id = request.POST.get('izin')
+        start_date_str = request.POST.get('start_date')
+        end_date_str = request.POST.get('end_date')
+        reason = request.POST.get('reason')
+        boss_nik = request.POST.get('boss')
+        photo_file = request.FILES.get('photo')
+
+        permission_type = get_object_or_404(MasterPermission, id=permission_type_id)
+        boss_obj = get_object_or_404(Users, nik=boss_nik)
+
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+
+        from django.utils.html import format_html
+
+        if permission_type.max_days and permission_type.max_days > 0:
+            end_date = start_date + timedelta(days=permission_type.max_days - 1)
+        else:
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+
+        if end_date < start_date:
+            messages.error(request, "Tanggal selesai tidak valid.")
+            return redirect(f'/users/pengajuan_izin/edit/{id}')
+
+        if permission_type.is_requires_attachment and not photo_file and not pengajuan.photo:
+            messages.error(
+                request,
+                format_html(
+                    "Izin {} memerlukan lampiran foto.",
+                    permission_type.name
+                )
+            )
+            return redirect(f'/users/pengajuan_izin/edit/{id}')
+
+        pengajuan.permission_type = permission_type
+        pengajuan.start_date = start_date
+        pengajuan.end_date = end_date
+        pengajuan.reason = reason
+        pengajuan.user_target = boss_obj
+
+        if photo_file:
+            pengajuan.photo = photo_file
+
+        pengajuan.save()
+
+        messages.success(
+            request,
+            format_html(
+                "Perubahan pengajuan izin {} berhasil disimpan.",
+                permission_type.name
+            )
+        )
+        return redirect('/users/pengajuan_izin')
+
+    context = {
+        'user': user,
+        'izin_list': MasterPermission.objects.all(),
+        'boss_list': Users.objects.filter(is_admin__in=[1, 2]),
+        'pengajuan': pengajuan,
+        'title': 'Edit Pengajuan Izin'
+    }
+
+    return render(request, 'user/izin/editForm.html', context)
+
+@login_auth
+def delete_pengajuan_izin(request, id):
+    try:
+        pengajuan = get_object_or_404(
+            PermissionRequests,
+            id=id
+        )
+        pengajuan.delete()
+
+        messages.success(request, 'Data pengajuan izin berhasil dihapus.')
+        return redirect('/users/pengajuan_izin')
+
+    except Exception as e:
+        messages.error(request, f'Gagal menghapus data pengajuan izin: {e}')
+        return redirect('/users/pengajuan_izin')

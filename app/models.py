@@ -4,7 +4,7 @@ from django.db import models
 class Users(models.Model):
     nik = models.CharField(max_length=20, unique=True, primary_key=True)
     name = models.CharField(max_length=100)
-    photo = models.ImageField(upload_to='static/img')
+    photo = models.ImageField(upload_to='img/')
     divisi = models.CharField(max_length=100,null=True)
     email = models.EmailField(unique=True, null=True, blank=True)
     password = models.CharField(max_length=100)
@@ -45,5 +45,19 @@ class OutAbsences(models.Model):
     nik = models.ForeignKey(Users, on_delete=models.CASCADE)
     date = models.DateTimeField()
     status = models.CharField(max_length=20)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class PermissionRequests(models.Model):
+    id = models.AutoField(primary_key=True)
+    nik = models.ForeignKey('app.Users', on_delete=models.CASCADE)
+    permission_type = models.ForeignKey('cms.MasterPermission', on_delete=models.CASCADE)
+    photo = models.ImageField(upload_to='bukti_izin/', null=True, blank=True)
+    note = models.TextField(blank=True, null=True)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    reason = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=20, default='Pending')
+    user_target = models.ForeignKey('app.Users', related_name='permission_approver', on_delete=models.CASCADE, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

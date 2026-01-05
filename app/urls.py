@@ -11,5 +11,9 @@ urlpatterns = [
     path('jadwal/', jadwal, name='jadwal'),
     path('presensi/', presensi, name='presensi'),
 
+    path('pengajuan_izin/', pengajuan_izin, name='pengajuan_izin'),
+    path('pengajuan_izin/edit/<int:id>', edit_pengajuan_izin, name='edit_pengajuan_izin'),
+    path('pengajuan_izin/delete/<int:id>', delete_pengajuan_izin, name='delete_pengajuan_izin'),
+
     path('profil/<str:nik>', profile, name='profile')
 ]

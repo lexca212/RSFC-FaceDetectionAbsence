@@ -1,0 +1,286 @@
+{% extends 'layouts/layout.html' %}
+{% load static %}
+{% block content %}
+<section class="content">
+  <div class="container-fluid">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3">
+        <h1 class="h3 mb-2 text-gray-800">Pengajuan Saya</h1> <br>
+        <a href="#" class="btn btn-primary " data-toggle="modal" data-target="#modalBuatIzin">
+          <i class="fa fa-plus"></i> Buat Pengajuan
+        </a>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-striped" id="tableprint" width="100%" cellspacing="0">
+            <thead>
+              <tr class='text-center'>
+                <th class='col-2'>Jenis Izin</th>
+                <th class='col-1'>Tanggal</th>
+                <th class='col-2'>Alasan</th>
+                <th class='col-2'>Bukti </th>
+                <th class='col-1'>Status</th>
+                <th class='col-2'>Catatan</th>
+                <th class='col-2'>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if pengajuan_list %}
+              {% for pengajuan in pengajuan_list %}
+              <tr class="text-center">
+                <td>{{ pengajuan.permission_type.name }}</td>
+                <td>{{ pengajuan.start_date }} s.d. {{ pengajuan.end_date }}</td>
+                <td class="text-left">{{ pengajuan.reason }}</td>
+                <td>
+                  {% if pengajuan.photo %}
+                    <img src="{{ pengajuan.photo.url }}" style="width:150px" alt="Surat Pengajuan Izin">
+                  {% else %}
+                    <span class="text-muted">Tidak ada lampiran</span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if pengajuan.status == 'Approved' %}
+                    <span class="badge badge-primary"  style="font-size: 18px;">{{ pengajuan.status }}</span>
+                  {% elif pengajuan.status == 'Rejected' %}
+                    <span class="badge badge-danger"  style="font-size: 18px;">{{ pengajuan.status }}</span>
+                  {% elif pengajuan.status == 'Pending' or pengajuan.status == 'Divisi Approved' %}
+                    <span class="badge badge-warning text-white" style="font-size: 18px;">{{ pengajuan.status }}</span>
+                  {% else %}
+                    <span class="badge badge-secondary"  style="font-size: 18px;">{{ pengajuan.status }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ pengajuan.note }}</td>
+                <td>
+                {% if pengajuan.status == 'Pending' %}
+                  <a href="{% url 'edit_pengajuan_izin' pengajuan.id %}" class="btn btn-sm btn-warning my-1"><i class="fa fa-edit"></i> Edit</a> |
+                  <a href="javascript:void(0);" class="btn btn-sm btn-danger my-1 btn-hapus" data-url="{% url 'delete_pengajuan_izin' pengajuan.id %}"><i class="fa fa-times"></i> Batal</a>
+                {% else %}
+                  <span class="badge badge-info"  style="font-size: 18px;">{{ pengajuan.status }}</span>
+                {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+              {% else %}
+                <td colspan="8" class="text-center">Belum ada pengajuan cuti</td>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <br>
+</section>
+
+<!-- Modal Buat Pengajuan -->
+<div class="modal fade" id="modalBuatIzin">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header bg-primary">
+        <h4 class="modal-title text-white">Buat Pengajuan Izin</h4>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+
+      <form method="POST" action="{% url 'pengajuan_izin' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <input type='text' name="nik_id" id="nik_id" value="{{ user.nik }}" hidden>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Jenis Izin</label>
+                <select class="form-control" name="izin" id="izin" required>
+                  <option value="" selected disabled>-- Pilih Izin --</option>
+                  {% for izin in izin_list %}
+                  <option value="{{ izin.id }}" data-max-days="{{ izin.max_days }}" data-is-requires-attachment="{{ izin.is_requires_attachment }}">{{ izin.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Pilih Atasan</label>
+                <select class="form-control" name="boss" required>
+                  <option value="" selected disabled>-- Pilih Atasan --</option>
+                  {% for boss in boss_list %}
+                  <option value="{{ boss.nik }}">{{ boss.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>Tanggal Mulai</label>
+                <input type="date" class="form-control" id="start_date" name="start_date" required>
+              </div>
+            </div>
+
+            <div class="col-md-6" id="endDateWrapper" style="display: none;">
+              <div class="form-group">
+                <label>Tanggal Selesai</label>
+                <input type="date" class="form-control" id="end_date" name="end_date">
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <small class="text-danger" id="autoInfo" style="display:none;">
+              Tanggal selesai ditentukan otomatis oleh sistem: <span id="endDate"></span>
+            </small>
+          </div>
+            
+          <div class="form-group" id="attachmentWrapper" style="display:none;">
+            <label>Foto Pendukung <span class="text-danger" style="font-size: 12px;">(Required)</span></label>
+            <input type="file" class="form-control" id="photo" name="photo" accept="image/*"> 
+          </div>
+
+          <div class="form-group">
+            <label>Alasan</label>
+            <textarea class='form-control' id='reason' name='reason' rows="3"></textarea>
+          </div>
+
+        </div>
+
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-danger" data-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+{% if messages %}
+<script>
+    {% for message in messages %}
+    Swal.fire({
+        icon: "{{ message.tags }}",  
+        title: "{{ message.tags|capfirst }}",
+        text: "{{ message }}",
+        showConfirmButton: false,
+        timer: 10000
+    });
+    {% endfor %}
+</script>
+{% endif %}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).on('click', '.btn-hapus', function(e){
+    e.preventDefault(); // cegah langsung menuju link
+
+    var url = $(this).attr("data-url");
+
+    Swal.fire({
+        title: 'Yakin ingin menghapus data ini?',
+        text: "Data yang sudah dihapus tidak bisa dikembalikan!",
+        icon: 'warning',
+        showCancelButton: true,
+        cancelButtonColor: '#E0A800',
+        confirmButtonColor: '#d33',
+        cancelButtonText: 'Batal',
+        confirmButtonText: 'Ya, hapus!',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Redirect manual ke URL penghapusan
+            window.location.href = url;
+        }
+    });
+});
+</script>
+
+{% comment %} make check end_date not less then start_date use js{% endcomment %}
+<script>
+  document.getElementById('end_date').addEventListener('change', function() {
+    var startDate = new Date(document.getElementById('start_date').value);
+    var endDate = new Date(this.value);
+
+    if (endDate < startDate) {
+      Swal.fire({
+            icon: 'error',
+            title: 'Tanggal tidak valid',
+            text: 'Tanggal Selesai tidak boleh melebihi Tanggal Mulai!',
+        });
+      this.value = ''; 
+    }
+  });
+</script>
+
+<script>
+$(document).ready(function () {
+
+    function updateFormByPermission() {
+        let startDateVal = $('#start_date').val();
+        let maxDays = $('#izin option:selected').data('max-days');
+        let isRequiresAttachment = $('#izin option:selected').data('is-requires-attachment');
+        let start_date = $('#start_date').val();
+
+        maxDays = (maxDays === undefined || maxDays === null) ? 0 : parseInt(maxDays);
+
+        if (maxDays > 0) {
+            $('#endDateWrapper').hide();
+            $('#end_date')
+                .prop('required', false)
+                .val('');
+            
+            // Calculate and display the auto end date based on maxDays and start_date
+            let startDate = new Date(start_date);
+            startDate.setDate(startDate.getDate() + maxDays - 1);
+
+            let yyyy = startDate.getFullYear();
+            let mm = String(startDate.getMonth() + 1).padStart(2, '0');
+            let dd = String(startDate.getDate()).padStart(2, '0');
+
+            $('#endDate').text(`${dd}--${mm}--${yyyy}`);
+            
+            if (startDateVal) {
+                let startDate = new Date(startDateVal);
+                startDate.setDate(startDate.getDate() + maxDays - 1);
+
+                let yyyy = startDate.getFullYear();
+                let mm = String(startDate.getMonth() + 1).padStart(2, '0');
+                let dd = String(startDate.getDate()).padStart(2, '0');
+
+                $('#end_date').val(`${yyyy}-${mm}-${dd}`);
+            }
+        }
+
+        else {
+            $('#endDateWrapper').show();
+            $('#end_date')
+                .prop('required', true)
+                .prop('readonly', false)
+                .val('');
+        }
+
+        if (isRequiresAttachment === true || isRequiresAttachment === 'True') {
+            $('#attachmentWrapper').show();
+            $('#photo').prop('required', true);
+        } else {
+            $('#attachmentWrapper').hide();
+            $('#photo').prop('required', false);
+        }
+
+        $('#autoInfo').toggle(maxDays > 0);
+    }
+
+    $('#izin').on('change', updateFormByPermission);
+    $('#start_date').on('change', updateFormByPermission);
+
+});
+</script>
+
+
+{% endblock %}
