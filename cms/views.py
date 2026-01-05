@@ -1017,7 +1017,7 @@ def persetujuan_cuti(request):
 
     elif user.is_admin == 2:
         status_filter = ['Divisi Approved']
-        status_exclude = ['Pending', 'Divisi Approved']
+        status_exclude = ['Pending', 'Divisi Approved', 'Rejected']
         base_filter = {}
 
     pengajuan_list = LeaveRequests.objects.filter(
@@ -1377,3 +1377,158 @@ def deleteIzin(request, id):
     except Exception as e:
       messages.error(request, f'Gagal menghapus data izin: {e}')
       return redirect('/admins/izin')
+
+@login_auth
+@admin_required
+def persetujuan_izin(request):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
+
+    from datetime import date
+    from django.utils.timezone import now
+
+    today = now().date()
+
+    start_range = today.replace(day=1)
+
+    if today.month == 12:
+        end_range = date(today.year + 1, 1, 31)
+    else:
+        end_range = date(today.year, today.month + 2, 1) - date.resolution
+
+    if user.is_admin == 1:
+        status_filter = ['Pending']
+        status_exclude = ['Pending']
+        base_filter = {'user_target': user}
+
+    elif user.is_admin == 2:
+        status_filter = ['Divisi Approved']
+        status_exclude = ['Pending', 'Divisi Approved', 'Rejected']
+        base_filter = {}
+
+    pengajuan_list = PermissionRequests.objects.filter(
+        status__in=status_filter,
+        start_date__range=(start_range, end_range),
+        **base_filter
+    )
+
+    approve_list = PermissionRequests.objects.exclude(
+        status__in=status_exclude
+    ).filter(
+        start_date__range=(start_range, end_range),
+        **base_filter
+    )
+
+    context = {
+        'user': user,
+        'pengajuan_list': pengajuan_list,
+        'approval_list': approve_list,
+        'title': 'List Pengajuan Izin Karyawan'
+    }
+
+    return render(request, 'admin/izin_persetujuan/index.html', context)
+
+@login_auth
+@admin_required
+def detail_pengajuan_izin(request, id):
+    user = get_object_or_404(Users, nik=request.session['nik_id'])
+    pengajuan = get_object_or_404(PermissionRequests, id=id)
+
+    if request.method == 'POST':
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        status = request.POST.get('status')
+        note = request.POST.get('note')
+
+        try:
+            if user.is_admin == 1 and status == 'Approved':
+                status = 'Divisi Approved'
+
+            pengajuan.start_date = start_date
+            pengajuan.end_date = end_date
+            pengajuan.status = status
+            pengajuan.note = note
+            pengajuan.save()
+
+            if user.is_admin == 2 and status == "Approved":
+                from datetime import datetime, timedelta
+                start = datetime.strptime(start_date, "%Y-%m-%d").date()
+                end = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+                izin_schedule, _ = MasterSchedules.objects.get_or_create(
+                    id="IZIN",
+                    defaults={
+                        "name": "Izin",
+                        "start_time": "00:00",
+                        "end_time": "00:00"
+                    }
+                )
+
+                current = start
+                while current <= end:
+
+                    absence = InAbsences.objects.filter(
+                        nik=pengajuan.nik,
+                        date_in__date=current
+                    ).first()
+
+                    if absence:
+                        absence.status_in = "Izin"
+                        absence.status_out = "Izin"
+                        absence.schedule = izin_schedule
+                        absence.shift_order = 1
+                        absence.save()
+                    else:
+                        InAbsences.objects.create(
+                            nik=pengajuan.nik,
+                            date_in=datetime.combine(current, datetime.min.time()),
+                            status_in="Izin",
+                            date_out=datetime.combine(current, datetime.max.time()),
+                            status_out="Izin",
+                            schedule=izin_schedule,
+                            shift_order=1
+                        )
+
+                    schedule = MappingSchedules.objects.filter(
+                        nik=pengajuan.nik,
+                        date=current
+                    ).first()
+
+                    if schedule:
+                        schedule.schedule = izin_schedule
+                        schedule.shift_order = 1
+                        schedule.save()
+                    else:
+                        MappingSchedules.objects.create(
+                            id=f"{pengajuan.nik.nik}_{current}",
+                            nik=pengajuan.nik,
+                            schedule=izin_schedule,
+                            date=current,
+                            shift_order=1
+                        )
+
+                    current += timedelta(days=1)
+
+            messages.success(request, 'Data persetujuan izin berhasil disimpan.')
+            return redirect('/admins/persetujuan_izin')
+
+        except Exception as e:
+            messages.error(
+                request,
+                f'Gagal menyimpan data persetujuan izin. Error: {e}'
+            )
+            return redirect('/admins/persetujuan_izin')
+
+    status = (
+        ['Pending', 'Approved', 'Rejected']
+        if user.is_admin == 1
+        else ['Divisi Approved', 'Approved', 'Rejected']
+    )
+
+    context = {
+        'user': user,
+        'pengajuan': pengajuan,
+        'title': 'Detail Pengajuan Izin Karyawan',
+        'status': status
+    }
+
+    return render(request, 'admin/izin_persetujuan/detail.html', context)

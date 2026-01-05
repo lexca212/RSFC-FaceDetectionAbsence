@@ -1,0 +1,151 @@
+{% extends 'layouts/layout.html' %}
+{% load static %}
+{% block content %}
+
+<div class="modal-content mb-5">
+
+  <div class="modal-header bg-primary">
+    <h4 class="modal-title text-white">Detail Pengajuan Cuti</h4>
+    <a href="{% url 'persetujuan_izin' %}" class="close">
+      <span>&times;</span>
+    </a>
+  </div>
+
+  <form method="POST"
+        action="{% url 'detail_pengajuan_izin' pengajuan.id %}"
+        enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <input type="hidden" name="nik_id" value="{{ user.nik }}">
+
+    <div class="modal-body">
+
+      <!-- IDENTITAS -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>NIK</label>
+            <input type="text" class="form-control"
+                   readonly value="{{ pengajuan.nik.nik }}">
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>Nama</label>
+            <input type="text" class="form-control"
+                   readonly value="{{ pengajuan.nik.name }}">
+          </div>
+        </div>
+      </div>
+
+      <!-- IZIN & ALASAN -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>Jenis Izin</label>
+            <input type="text" class="form-control"
+                   readonly
+                   value="{{ pengajuan.permission_type.name }}">
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>Alasan</label>
+            <input type="text" class="form-control"
+                   readonly value="{{ pengajuan.reason }}">
+          </div>
+        </div>
+      </div>
+
+      <!-- FOTO (AMAN JIKA NULL) -->
+      <div class="form-group">
+        <label>Foto Pendukung</label><br>
+
+        {% if pengajuan.photo %}
+          <a href="{{ pengajuan.photo.url }}" target="_blank">
+            <img src="{{ pengajuan.photo.url }}"
+                 style="width:150px"
+                 alt="Foto Pendukung">
+          </a>
+        {% else %}
+          <span class="text-muted">Tidak ada lampiran</span>
+        {% endif %}
+      </div>
+
+      <!-- TANGGAL -->
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>Tanggal Mulai</label>
+            <input type="date"
+                   class="form-control"
+                   id="start_date"
+                   name="start_date"
+                   value="{{ pengajuan.start_date|date:'Y-m-d' }}"
+                   readonly>
+          </div>
+        </div>
+
+        <div class="col-md-4" id="endDateWrapper">
+          <div class="form-group">
+            <label>Tanggal Selesai</label>
+            <input type="date"
+                   class="form-control"
+                   id="end_date"
+                   name="end_date"
+                   value="{{ pengajuan.end_date|date:'Y-m-d' }}"
+                   readonly>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>Status</label>
+            <select class="form-control" name="status" required>
+              <option value="" disabled>-- Pilih Status --</option>
+              {% for s in status %}
+                <option value="{{ s }}"
+                  {% if s == pengajuan.status %}selected{% endif %}>
+                  {{ s }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- INFO AUTO -->
+      {% if pengajuan.permission_type.max_days %}
+      <div class="form-group">
+        <small class="text-danger">
+          Tanggal selesai ditentukan otomatis oleh sistem
+          ({{ pengajuan.permission_type.max_days }} hari)
+        </small>
+      </div>
+      {% endif %}
+
+      <!-- CATATAN -->
+      <div class="form-group">
+        <label>Catatan</label>
+        <textarea class="form-control"
+                  name="note"
+                  rows="3">{{ pengajuan.note }}</textarea>
+      </div>
+
+    </div>
+
+    <div class="modal-footer justify-content-between">
+      <a href="{% url 'persetujuan_cuti' %}" class="btn btn-danger">
+        <i class="fa fa-times"></i> Batal
+      </a>
+      <button type="submit" class="btn btn-primary">
+        Submit
+      </button>
+    </div>
+
+  </form>
+</div>
+
+{% endblock %}
