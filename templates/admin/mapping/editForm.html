@@ -59,14 +59,12 @@
         {% csrf_token %}
         <input type="hidden" name="bulan" value="{{ bulan }}">
         <input type="hidden" name="tahun" value="{{ tahun }}">
-        {% comment %} <input type="hidden" name="divisi" value="{{ divisi }}"> {% endcomment %}
 
         <div class="card-body table-responsive p-0">
             <table class="table table-bordered table-sm text-center">
                 <thead class="bg-secondary text-white">
                     <tr>
                         <th class="sticky-col-header" style="min-width: 180px;">Nama Karyawan</th>
-
                         {% for tgl in tanggal_list %}
                             <th class="col-tanggal">{{ tgl }}</th>
                         {% endfor %}
@@ -76,7 +74,9 @@
                 <tbody>
                     {% for user in users %}
                     <tr>
-                        <td class="sticky-col text-left font-weight-bold">{{ user.name }}</td>
+                        <td class="sticky-col text-left font-weight-bold">
+                            {{ user.name }}
+                        </td>
 
                         {% for tgl in tanggal_list %}
                         <td class="col-tanggal">
@@ -84,23 +84,25 @@
                             {% with data_hari=jadwal_lama|dict_get:user.nik|dict_get:tgl %}
 
                             <select class="form-control form-control-sm mb-1"
-                                    name="shift_{{ user.nik }}_{{ tgl }}_1">
+                                    name="shift_{{ user.nik }}_{{ tgl }}_1"
+                                    {% if data_hari|dict_get:1 == "CUTI" or data_hari|dict_get:1 == "IZIN" %}
+                                        disabled
+                                    {% endif %}
+                            >
 
-                                <option value="-" {% if not data_hari %}selected{% endif %}>
-                                    -
-                                </option>
+                                <option value="-" {% if not data_hari %}selected{% endif %}>-</option>
 
                                 {% for schedule in schedules %}
-
                                     {% with selected_value=data_hari|dict_get:1 %}
 
-                                        {% if selected_value == "CUTI" %}
-                                            {% if schedule.id == "CUTI" %}
-                                                <option value="CUTI" selected>CUTI</option>
+                                        {% if selected_value == "CUTI" or selected_value == "IZIN" %}
+                                            {% if schedule.id == selected_value %}
+                                                <option value="{{ schedule.id }}" selected>
+                                                    {{ schedule.name }}
+                                                </option>
                                             {% endif %}
-
                                         {% else %}
-                                            {% if schedule.id != "CUTI" %}
+                                            {% if schedule.id != "CUTI" and schedule.id != "IZIN" %}
                                                 <option value="{{ schedule.id }}"
                                                     {% if selected_value == schedule.id %}selected{% endif %}
                                                 >
@@ -110,28 +112,29 @@
                                         {% endif %}
 
                                     {% endwith %}
-
                                 {% endfor %}
                             </select>
 
                             <select class="form-control form-control-sm"
-                                    name="shift_{{ user.nik }}_{{ tgl }}_2">
+                                    name="shift_{{ user.nik }}_{{ tgl }}_2"
+                                    {% if data_hari|dict_get:2 == "CUTI" or data_hari|dict_get:2 == "IZIN" %}
+                                        disabled
+                                    {% endif %}
+                            >
 
-                                <option value="-" {% if not data_hari %}selected{% endif %}>
-                                    -
-                                </option>
+                                <option value="-" {% if not data_hari %}selected{% endif %}>-</option>
 
                                 {% for schedule in schedules %}
-
                                     {% with selected_value=data_hari|dict_get:2 %}
 
-                                        {% if selected_value == "CUTI" %}
-                                            {% if schedule.id == "CUTI" %}
-                                                <option value="CUTI" selected>CUTI</option>
+                                        {% if selected_value == "CUTI" or selected_value == "IZIN" %}
+                                            {% if schedule.id == selected_value %}
+                                                <option value="{{ schedule.id }}" selected>
+                                                    {{ schedule.name }}
+                                                </option>
                                             {% endif %}
-
                                         {% else %}
-                                            {% if schedule.id != "CUTI" %}
+                                            {% if schedule.id != "CUTI" and schedule.id != "IZIN" %}
                                                 <option value="{{ schedule.id }}"
                                                     {% if selected_value == schedule.id %}selected{% endif %}
                                                 >
@@ -141,7 +144,6 @@
                                         {% endif %}
 
                                     {% endwith %}
-
                                 {% endfor %}
                             </select>
 

@@ -511,8 +511,8 @@ def jadwal(request):
         if day not in mapping:
             mapping[day] = []
 
-        if sched.name in ["Libur", "Cuti"]:
-            mapping[day] = [sched.name]  # override semua shift
+        if sched.name in ["Libur", "Cuti", "Izin"]:
+            mapping[day] = [sched.name] 
         else:
             mapping[day].append(
                 f"{sched.start_time.strftime('%H:%M')} - {sched.end_time.strftime('%H:%M')}"

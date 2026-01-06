@@ -77,6 +77,8 @@
                                 class="bg-secondary"
                             {% elif first == "Cuti" %}
                                 class="bg-warning"
+                            {% elif first == "Izin" %}
+                                class="bg-info"
                             {% endif %}
                         >
                             <td class="fw-bold">{{ item.tanggal }}</td>
@@ -89,7 +91,10 @@
                                     <span class="badge bg-secondary" style="font-size:16px;">Libur</span>
 
                                 {% elif first == "Cuti" %}
-                                    <span clas-s="badge bg-warning text-dark" style="font-size:16px;">Cuti</span>
+                                    <span class="badge bg-warning text-dark" style="font-size:16px;">Cuti</span>
+
+                                {% elif first == "Izin" %}
+                                    <span class="badge bg-info" style="font-size:16px;">Izin</span>
 
                                 {% else %}
                                     {% for jam in item.jadwal %}

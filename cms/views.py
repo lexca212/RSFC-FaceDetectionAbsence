@@ -474,7 +474,7 @@ def mapping_jadwal(request):
                 "days": {d: [] for d in range(1, total_hari + 1)}
             })
 
-            if jadwal.schedule and jadwal.schedule.id != "CUTI" and jadwal.schedule.id != "LIBUR":
+            if jadwal.schedule and jadwal.schedule.id != "CUTI" and jadwal.schedule.id != "LIBUR" and jadwal.schedule.id != "IZIN":
                 jam = f"{jadwal.schedule.start_time.strftime('%H:%M')} - {jadwal.schedule.end_time.strftime('%H:%M')}"
             elif jadwal.schedule:
                 jam = jadwal.schedule.name
@@ -511,7 +511,7 @@ def buat_jadwal(request):
     _, jumlah_hari = calendar.monthrange(tahun, bulan)
     tanggal_list = list(range(1, jumlah_hari + 1))
 
-    schedules = MasterSchedules.objects.exclude(id='CUTI').all()
+    schedules = MasterSchedules.objects.exclude(id__in=['CUTI', 'IZIN']).all()
 
     users = Users.objects.filter(divisi=divisi)
 
