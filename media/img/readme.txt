@@ -1,0 +1,1 @@
+This folder is used to store users image data.

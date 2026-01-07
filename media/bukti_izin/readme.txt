@@ -1,0 +1,1 @@
+This folder is used to store bukti_izin image data.

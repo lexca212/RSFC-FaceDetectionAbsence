@@ -18,4 +18,12 @@ db.sqlite3
 /static/cuti_img/*.png
 /static/cuti_img/*.jpg
 
+/media/img/*.jpeg
+/media/img/*.png
+/media/img/*.jpg
+
+/media/bukti_izin/*.jpeg
+/media/bukti_izin/*.png
+/media/bukti_izin/*.jpg
+
 /staticfiles/
