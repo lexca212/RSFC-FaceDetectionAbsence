@@ -1,4 +1,5 @@
 from django.db import models
+from utils.image import compress_image
 
 # Create your models here.
 class Users(models.Model):
@@ -61,3 +62,8 @@ class PermissionRequests(models.Model):
     user_target = models.ForeignKey('app.Users', related_name='permission_approver', on_delete=models.CASCADE, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if self.photo:
+            self.photo = compress_image(self.photo)
+        super().save(*args, **kwargs)
