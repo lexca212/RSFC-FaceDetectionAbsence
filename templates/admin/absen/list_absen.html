@@ -92,6 +92,8 @@
                                     text-secondary 
                                 {% elif absen.status_in == 'Cuti'%}
                                     text-warning 
+                                {% elif absen.status_in == 'Izin'%}
+                                    text-info
                                 {% endif %}
                             ">
                             {{ absen.status_in }}
@@ -112,6 +114,8 @@
                                     text-secondary 
                                 {% elif absen.status_out == 'Cuti'%}
                                     text-warning 
+                                {% elif absen.status_out == 'Izin'%}
+                                    text-info
                                 {% else %}
                                 {% endif %}
                             ">
@@ -124,6 +128,8 @@
                                 <span class="text-warning">Cuti</span>
                             {% elif absen.status_in == 'Libur'%}
                                 <span class="text-secondary">Libur</span>
+                            {% elif absen.status_in == 'Izin'%}
+                                <span class="text-info">Izin</span>
                             {% else %}
                                 <span class="text-success">Tidak Terlambat</span>
                             {% endif %}
@@ -208,6 +214,8 @@
                                             text-secondary 
                                         {% elif absen.status_in == 'Cuti'%}
                                             text-warning 
+                                        {% elif absen.status_in == 'Izin'%}
+                                            text-info 
                                         {% endif %}
                                     ">
                                     {{ absen.status_in }}
@@ -228,6 +236,8 @@
                                             text-secondary 
                                         {% elif absen.status_out == 'Cuti'%}
                                             text-warning 
+                                        {% elif absen.status_out == 'Izin'%}
+                                            text-info
                                         {% else %}
                                         {% endif %}
                                     ">
@@ -240,6 +250,8 @@
                                         <span class="text-warning">Cuti</span>
                                     {% elif absen.status_in == 'Libur'%}
                                         <span class="text-secondary">Libur</span>
+                                    {% elif absen.status_in == 'Izin'%}
+                                        <span class="text-info">Izin</span>
                                     {% else %}
                                         <span class="text-success">Tidak Terlambat</span>
                                     {% endif %}

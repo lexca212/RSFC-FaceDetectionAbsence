@@ -109,6 +109,11 @@ def dashboard(request):
         status_in="Libur"
     ).count()
 
+    izin_hari_ini = InAbsences.objects.filter(
+        date_in__range=(start, end),
+        status_in="Izin"
+    ).count()
+
     belum_hadir = total_jadwal - hadir_hari_ini - libur_hari_ini
 
     # Grafik 7 hari
@@ -161,6 +166,7 @@ def dashboard(request):
         "terlamabt_hari_ini": terlamabt_hari_ini,
         "cuti_hari_ini": cuti_hari_ini,
         "libur_hari_ini": libur_hari_ini,
+        "izin_hari_ini": izin_hari_ini,
         "total_karyawan": total_karyawan,
         "hadir_hari_ini": hadir_hari_ini,
         "belum_hadir": belum_hadir,
@@ -889,7 +895,7 @@ def _hitung_absen(absen):
     absen.total_work_minutes = 0
     absen.total_work = "00:00:00"
 
-    if absen.schedule and absen.schedule.id in ('LIBUR', 'CUTI') or \
+    if absen.schedule and absen.schedule.id in ('LIBUR', 'CUTI', 'IZIN') or \
        getattr(absen, 'status_in', '').lower() == 'libur':
         return 
 
@@ -1552,41 +1558,21 @@ def riwayat_keluar (request):
     from datetime import datetime, timedelta
     user = get_object_or_404(Users, nik=request.session.get('nik_id'))
 
-    # OPTIONAL: proteksi role
-    # if user.is_admin not in [1, 2]:
-    #     return HttpResponseForbidden()
-
-    # ======================================================
-    # FILTER INPUT
-    # ======================================================
     divisi = request.GET.get('divisi')
     start = request.GET.get('start')
     end = request.GET.get('end')
 
-    # ======================================================
-    # BASE QUERY
-    # ======================================================
     qs = (
         OutPermission.objects
         .select_related('nik')
         .order_by('-time_out')
     )
 
-    # ======================================================
-    # FILTER DIVISI
-    # ======================================================
     if divisi:
         qs = qs.filter(nik__divisi=divisi)
 
-    # ======================================================
-    # SEDANG KELUAR (STATUS OUT)
-    # ======================================================
     out_active = qs.filter(status='Keluar')
 
-    # ======================================================
-    # RIWAYAT
-    # DEFAULT: 31 HARI TERAKHIR
-    # ======================================================
     out_history = qs
 
     if start and end:
@@ -1605,9 +1591,6 @@ def riwayat_keluar (request):
             time_out__gte=timezone.now() - timedelta(days=31)
         )
 
-    # ======================================================
-    # HITUNG DURASI (BACKEND)
-    # ======================================================
     for o in out_history:
         if o.time_out and o.time_in:
             delta = o.time_in - o.time_out
@@ -1618,9 +1601,6 @@ def riwayat_keluar (request):
         else:
             o.duration_minutes = None
 
-    # ======================================================
-    # LIST DIVISI (UNTUK DROPDOWN FILTER)
-    # ======================================================
     divisi_list = (
         Users.objects
         .exclude(divisi__isnull=True)
@@ -1630,9 +1610,6 @@ def riwayat_keluar (request):
         .order_by('divisi')
     )
 
-    # ======================================================
-    # RENDER
-    # ======================================================
     return render(request, 'admin/keluar/index.html', {
         'user': user,
         'title': 'Rekap Izin Keluar (Out Permission)',

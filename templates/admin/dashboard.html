@@ -12,6 +12,13 @@
     flex: 1;                    /* isi penuh space tersisa */
     overflow-y: auto;           /* scroll jika konten melebihi */
 }
+
+.table-scroll thead th {
+    position: sticky;
+    top: 0;
+    background: #f4f6f9; /* warna default AdminLTE */
+    box-shadow: 0 2px 2px rgba(0,0,0,.05);
+}
 </style>
 
 <!-- Chart.js -->
@@ -52,7 +59,7 @@
         </div>
     </div>
 
-    <div class="col-md-2">
+    <div class="col-md-3">
         <div class="card shadow-sm border-0 bg-primary">
             <div class="card-body ">
                 <h6 class="text-white">Hadir </h6>
@@ -61,8 +68,8 @@
         </div>
     </div>
 
-    <div class="col-md-2">
-        <div class="card shadow-sm border-0 bg-secondary">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 bg-dark">
             <div class="card-body">
                 <h6 class="text-white">Belum Hadir</h6>
                 <h3 class="text-white">{{ belum_hadir }}</h3>
@@ -70,7 +77,7 @@
         </div>
     </div>
 
-    <div class="col-md-2">
+    <div class="col-md-3">
         <div class="card shadow-sm border-0 bg-success">
             <div class="card-body">
                 <h6 class="text-white">Tepat Waktu</h6>
@@ -79,7 +86,7 @@
         </div>
     </div>
 
-    <div class="col-md-2">
+    <div class="col-md-3">
         <div class="card shadow-sm border-0 bg-danger">
             <div class="card-body">
                 <h6 class="text-white">Terlambat</h6>
@@ -88,7 +95,7 @@
         </div>
     </div>
 
-    <div class="col-md-2">
+    <div class="col-md-4">
         <div class="card shadow-sm border-0 bg-warning">
             <div class="card-body">
                 <h6 class="text-white">Cuti</h6>
@@ -97,11 +104,20 @@
         </div>
     </div>
 
-    <div class="col-md-2">
-        <div class="card shadow-sm border-0 bg-info">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 bg-secondary">
             <div class="card-body">
                 <h6 class="text-white">Libur</h6>
                 <h3 class="text-white">{{ libur_hari_ini }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 bg-info">
+            <div class="card-body">
+                <h6 class="text-white">Izin</h6>
+                <h3 class="text-white">{{ izin_hari_ini }}</h3>
             </div>
         </div>
     </div>
@@ -173,8 +189,9 @@
                                         {% if row.status_masuk == 'Tepat Waktu' %}badge bg-success
                                         {% elif row.status_masuk == 'Terlambat' %}badge bg-danger
                                         {% elif row.status_masuk == 'Cuti' %}badge bg-warning
-                                        {% elif row.status_masuk == 'Libur' %}badge bg-info
-                                        {% else %}badge bg-secondary{% endif %}
+                                        {% elif row.status_masuk == 'Libur' %}badge bg-secondary
+                                        {% elif row.status_masuk == 'Izin' %}badge bg-info
+                                        {% else %}badge bg-dark{% endif %}
                                     ">
                                     {% if row.status_masuk %}
                                         {{ row.status_masuk }}
@@ -225,10 +242,10 @@
     new Chart(document.getElementById('todayChart'), {
         type: 'pie',
         data: {
-            labels: ['Tepat Waktu', 'Terlambat', 'Cuti', 'Libur', 'Belum Hadir'],
+            labels: ['Tepat Waktu', 'Terlambat', 'Cuti', 'Libur', 'Izin', 'Belum Hadir'],
             datasets: [{
-                data: [{{ tepat_waktu_hari_ini }}, {{ terlamabt_hari_ini }}, {{ cuti_hari_ini }}, {{ libur_hari_ini }}, {{ belum_hadir }}],
-                backgroundColor: ['#28A745', '#DC3545', '#FFC107', '#17A2B8', '#6C757D']
+                data: [{{ tepat_waktu_hari_ini }}, {{ terlamabt_hari_ini }}, {{ cuti_hari_ini }}, {{ libur_hari_ini }}, {{ izin_hari_ini }}, {{ belum_hadir }}],
+                backgroundColor: ['#28A745', '#DC3545', '#FFC107', '#17A2B8', '#6C757D', '#343A40']
             }]
         },
         options: { responsive: true }

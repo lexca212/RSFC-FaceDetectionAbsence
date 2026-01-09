@@ -26,7 +26,7 @@
               </thead>
               <tbody>
                   {% for item in absensi_bulanan %}
-                      <tr {% if item.status_in == 'Libur' %} class='bg-secondary' {% elif item.status_in == 'Cuti' %} class='bg-warning' {% endif %}>
+                      <tr {% if item.status_in == 'Libur' %} class='bg-secondary' {% elif item.status_in == 'Cuti' %} class='bg-warning' {% elif item.status_in == 'Izin' %} class='bg-info' {% endif %}>
                           <td class="text-center">{{ item.tanggal }}</td>
 
                           <!-- Translate English day → Indonesian -->
@@ -49,6 +49,8 @@
                                   <span class="badge bg-secondary" style="font-size:16px;">{{ item.status_in }}</span>
                               {% elif item.status_in == "Cuti" %}
                                   <span class="badge bg-warning" style="font-size:16px;">{{ item.status_in }}</span>
+                              {% elif item.status_in == "Izin" %}
+                                  <span class="badge bg-info" style="font-size:16px;">{{ item.status_in }}</span>
                               {% else %}
                                   -
                               {% endif %}
@@ -71,6 +73,8 @@
                                   <span class="badge bg-secondary text-dark" style="font-size:16px;">{{ item.status_out }}</span>
                               {% elif item.status_out == "Cuti" %}
                                   <span class="badge bg-warning text-dark" style="font-size:16px;">{{ item.status_out }}</span>
+                              {% elif item.status_out == "Izin" %}
+                                  <span class="badge bg-info" style="font-size:16px;">{{ item.status_out }}</span>
                               {% else %}
                                   -
                               {% endif %}
