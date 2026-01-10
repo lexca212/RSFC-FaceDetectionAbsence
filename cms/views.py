@@ -1551,6 +1551,18 @@ def detail_pengajuan_izin(request, id):
 
     return render(request, 'admin/izin_persetujuan/detail.html', context)
 
+def timedelta_to_hms(td):
+    if not td:
+        return "00:00:00"
+
+    total_seconds = int(td.total_seconds())
+
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    seconds = total_seconds % 60
+
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
 @login_auth
 @admin_required
 @superadmin_required
@@ -1713,12 +1725,16 @@ def rekap_kehadiran(request):
         'query_string': urlencode(query_params),
         'start_date': start_date_obj.strftime('%Y-%m-%d'),
         'end_date': end_date_obj.strftime('%Y-%m-%d'),
+        'divisi': divisi_id,
         'divisi_list': MasterDivisions.objects.all(),
         'title': 'Rekap Kehadiran Karyawan'
     }
 
     return render(request, 'admin/rekap/index.html', context)
 
+@login_auth
+@admin_required
+@superadmin_required
 def rekap_kehadiran_detail(request, nik):
     from django.db.models import Count, Sum
     from datetime import datetime, time
@@ -1900,3 +1916,211 @@ def rekap_kehadiran_detail(request, nik):
     }
 
     return render(request, 'admin/rekap/detail.html', context)
+
+@login_auth
+@admin_required
+@superadmin_required
+def rekap_kehadiran_print(request):
+    from datetime import datetime, time, timedelta
+    from django.db.models import Sum
+
+    user_login = get_object_or_404(Users, nik=request.session['nik_id'])
+
+    # ===============================
+    # FILTER
+    # ===============================
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    divisi = request.GET.get('divisi')
+
+    today = timezone.localdate()
+
+    if not start_date or not end_date:
+        start_date_obj = today.replace(day=1)
+        end_date_obj = today
+    else:
+        start_date_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_date_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+    start_datetime = timezone.make_aware(
+        datetime.combine(start_date_obj, time.min)
+    )
+    end_datetime = timezone.make_aware(
+        datetime.combine(end_date_obj, time.max)
+    )
+
+    # ===============================
+    # MASTER DATA
+    # ===============================
+    master_cuti = MasterLeaves.objects.all().order_by('id')
+    master_izin = MasterPermission.objects.all().order_by('id')
+
+    # ===============================
+    # QUERY USER
+    # ===============================
+    users = Users.objects.all().order_by('divisi', 'name')
+
+    if divisi:
+        users = users.filter(divisi=divisi)
+
+    data = []
+
+    # ===============================
+    # LOOP USER
+    # ===============================
+    for u in users:
+
+        # ===============================
+        # ABSENSI DASAR
+        # ===============================
+        hadir = InAbsences.objects.filter(
+            nik=u,
+            date_in__range=(start_datetime, end_datetime),
+            status_in='Tepat Waktu'
+        ).count()
+
+        terlambat = InAbsences.objects.filter(
+            nik=u,
+            date_in__range=(start_datetime, end_datetime),
+            status_in='Terlambat'
+        ).count()
+
+        pulang_cepat = InAbsences.objects.filter(
+            nik=u,
+            date_out__range=(start_datetime, end_datetime),
+            status_out='Pulang Cepat'
+        ).count()
+
+        # ===============================
+        # CUTI PER JENIS (HITUNG HARI)
+        # ===============================
+        cuti_detail = {}
+
+        for mc in master_cuti:
+            total_hari = 0
+
+            qs = LeaveRequests.objects.filter(
+                nik=u,
+                leave_type=mc,
+                status='Approved',
+                start_date__lte=end_date_obj,
+                end_date__gte=start_date_obj
+            )
+
+            for c in qs:
+                s = max(c.start_date, start_date_obj)
+                e = min(c.end_date, end_date_obj)
+                total_hari += (e - s).days + 1
+
+            cuti_detail[mc.name] = total_hari
+
+        # ===============================
+        # IZIN PER JENIS (HITUNG HARI)
+        # ===============================
+        izin_detail = {}
+
+        for mi in master_izin:
+            total_hari = 0
+
+            qs = PermissionRequests.objects.filter(
+                nik=u,
+                permission_type=mi,
+                status='Approved',
+                start_date__lte=end_date_obj,
+                end_date__gte=start_date_obj
+            )
+
+            for i in qs:
+                s = max(i.start_date, start_date_obj)
+                e = min(i.end_date, end_date_obj)
+                total_hari += (e - s).days + 1
+
+            izin_detail[mi.name] = total_hari
+
+        # ===============================
+        # IZIN KELUAR (JAM)
+        # ===============================
+        izin_keluar_qs = OutPermission.objects.filter(
+            nik=u,
+            date__range=(start_date_obj, end_date_obj),
+            status='Kembali'
+        )
+
+        izin_keluar_count = izin_keluar_qs.count()
+
+        total_izin_keluar_minutes = izin_keluar_qs.aggregate(
+            total=Sum('duration_minutes')
+        )['total'] or 0
+
+        total_izin_keluar_td = timedelta(minutes=total_izin_keluar_minutes)
+
+        # ===============================
+        # JAM KERJA & LEMBUR
+        # ===============================
+        kerja = timedelta()
+        lembur = timedelta()
+
+        absensi = InAbsences.objects.filter(
+            nik=u,
+            date_in__range=(start_datetime, end_datetime),
+            date_out__isnull=False
+        ).exclude(
+            status_in__in=['Libur', 'Cuti', 'Izin']
+        )
+
+        for a in absensi:
+            durasi = a.date_out - a.date_in
+
+            if a.shift_order == 1:
+                kerja += durasi
+            elif a.shift_order == 2:
+                lembur += durasi
+
+        # ===============================
+        # TOTAL JAM FINAL
+        # ===============================
+        total_final_td = kerja + lembur - total_izin_keluar_td
+
+        # ===============================
+        # FORMAT TIME
+        # ===============================
+        jam_kerja = timedelta_to_hms(kerja)
+        jam_lembur = timedelta_to_hms(lembur)
+        izin_keluar_time = timedelta_to_hms(total_izin_keluar_td)
+        total_jam_final = timedelta_to_hms(total_final_td)
+
+        # ===============================
+        # APPEND DATA
+        # ===============================
+        data.append({
+            'nik': u.nik,
+            'nama': u.name,
+            'divisi': u.divisi or '-',
+
+            'hadir': hadir,
+            'terlambat': terlambat,
+            'pulang_cepat': pulang_cepat,
+
+            'cuti_detail': cuti_detail,
+            'izin_detail': izin_detail,
+
+            'izin_keluar_count': izin_keluar_count,
+            'izin_keluar_time': izin_keluar_time,
+
+            'jam_kerja': jam_kerja,
+            'jam_lembur': jam_lembur,
+            'total_jam': total_jam_final,
+        })
+
+    # ===============================
+    # RENDER
+    # ===============================
+    return render(request, 'admin/rekap/print.html', {
+        'title': 'Cetak Rekap Kehadiran Karyawan',
+        'user': user_login,
+        'start_date': start_date_obj,
+        'end_date': end_date_obj,
+        'data': data,
+        'master_cuti': master_cuti,
+        'master_izin': master_izin,
+    })

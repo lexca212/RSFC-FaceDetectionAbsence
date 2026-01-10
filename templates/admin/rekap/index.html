@@ -29,7 +29,7 @@
                             <option value="">Semua Divisi</option>
                             {% for d in divisi_list %}
                                 <option value="{{ d.id }}"
-                                    {% if d.id|stringformat:"s" == divisi_id %}selected{% endif %}>
+                                    {% if d.id|stringformat:"s" == divisi %}selected{% endif %}>
                                     {{ d.name }}
                                 </option>
                             {% endfor %}
@@ -50,7 +50,14 @@
     <!-- TABEL REKAP -->
     <div class="card shadow-sm">
         <div class="card-header fw-bold">
-            Rekap Kehadiran Karyawan
+            <span>Rekap Kehadiran Karyawan</span>
+            <div class="mt-2">
+                <a href="{% url 'rekap_kehadiran_print' %}?start_date={{ start_date }}&end_date={{ end_date }}&divisi={{ divisi }}"
+                    target="_blank"
+                    class="btn btn-outline-danger">
+                    <i class="fa fa-print"></i> Cetak
+                </a>
+            </div>
         </div>
         <div class="card-body table-responsive">
             <table class="table table-bordered table-hover text-center align-middle">
