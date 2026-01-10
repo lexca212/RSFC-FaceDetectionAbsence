@@ -1,0 +1,202 @@
+{% load dict_filter %}
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+        }
+
+        .header-container {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 15px;
+            font-family: Arial, sans-serif;
+        }
+
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .logo-cell {
+            width: 80px;
+            text-align: left;
+            padding-left: 5px;
+        }
+
+        .logo-img {
+            width: 70px;
+        }
+
+        .text-cell {
+            text-align: center;
+            padding-right: 100px;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .header-sub {
+            font-size: 13px;
+            margin-top: 3px;
+        }
+
+        .line-1 {
+            border: 1px solid black;
+            margin: 2px 0 0 0;
+        }
+
+        .line-2 {
+            border: 2px solid black;
+            margin: 2px 0 10px 0;
+        }
+
+        .header-report-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            margin-top: 5px;
+            font-size: 16px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-left {
+            text-align: left;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 6px;
+            border-bottom: 2px solid #767676ff;
+            border-top: 2px solid #767676ff;
+            background: #eaeaeaff;
+        }
+
+        /* Hapus semua border pada body */
+        td {
+            padding: 6px;
+            border: none;
+        }
+
+        /* Nomor kolom lebih sempit */
+        .col-no {
+            width: 40px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        @media print {
+            button { display: none; }
+            body { margin: 0; }
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header-container">
+    <table class="header-table">
+        <tr>
+            <td class="logo-cell">
+                <img src="{% static 'assets/images/rsfc_logo.png' %}" class="logo-img">
+            </td>
+            <td class="text-cell">
+                <div class="header-title">RS Umum Fitri Candra</div>
+                <div class="header-sub">
+                    Jl. Brigjend Katamso, Selogiri, Wonogiri, Jawa Tengah<br>
+                    (0273) 5328899<br>
+                    E-mail : rsb_fitricandra@ymail.com
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <hr class="line-1">
+    <hr class="line-2">
+
+    <div class="header-report-title">{{ title }}</div>
+    <div class="periode">
+        Periode {{ start_date|date:"d-m-Y" }} s/d {{ end_date|date:"d-m-Y" }}
+    </div>
+</div>
+
+<button onclick="window.print()">Print Sekarang</button>
+
+<table>
+    <thead>
+        <tr class="text-center">
+            <th>NIK</th>
+            <th>Nama</th>
+            <th>Divisi</th>
+            <th>Hadir</th>
+            <th>Terlambat</th>
+            <th>Pulang Cepat</th>
+            {% for c in master_cuti %}
+                <th>{{ c.name }}</th>
+            {% endfor %}
+
+            {% for i in master_izin %}
+                <th>{{ i.name }}</th>
+            {% endfor %}
+            <th>Izin Keluar</th>
+            <th>Jam Kerja</th>
+            <th>Jam Lembur</th>
+            <th>Izin Keluar</th>
+            <th>Total Jam</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for row in data %}
+        <tr class="text-center">
+            <td class="text-left">{{ row.nik }}</td>
+            <td class="text-left">{{ row.nama }}</td>
+            <td class="text-left">{{ row.divisi }}</td>
+            <td >{{ row.hadir }}</td>
+            <td>{{ row.terlambat }}</td>
+            <td>{{ row.pulang_cepat }}</td>
+            {% for c in master_cuti %}
+                <td>{{ row.cuti_detail|dict_get:c.name }}</td>
+            {% endfor %}
+
+            {% for i in master_izin %}
+                <td>{{ row.izin_detail|dict_get:i.name }}</td>
+            {% endfor %}
+            <td>{{ row.izin_keluar_count }}</td>
+            <td>{{ row.jam_kerja }}</td>
+            <td>{{ row.jam_lembur }}</td>
+            <td>{{ row.izin_keluar_time }}</td>
+            <td><strong>{{ row.total_jam }}</strong></td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="14" style="text-align:center;color:gray;">
+                Tidak ada data
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>
