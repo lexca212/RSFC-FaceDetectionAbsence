@@ -115,6 +115,18 @@ scratch. This page gets rid of all links and provides the needed markup only.
               </a>
             </li>
             <li class="nav-item active">
+              <a href="{% url 'rekap_kehadiran' %}" class="nav-link">
+                <i class="nav-icon fa fa-solid fa-table"></i>
+                <p>Rekap Kehadiran</p>
+              </a>
+            </li>
+            <li class="nav-item active">
+              <a href="{% url 'riwayat_keluar' %}" class="nav-link">
+                <i class="nav-icon fas fa-clipboard-list"></i>
+                <p>Rekap Izin Keluar</p>
+              </a>
+            </li>
+            <li class="nav-item active">
               <a href="{% url 'addUser' %}" class="nav-link">
                 <i class="nav-icon fas fa-user-plus"></i>
                 <p>Tambah Data Karyawan</p>
@@ -138,12 +150,6 @@ scratch. This page gets rid of all links and provides the needed markup only.
               <a href="{% url 'persetujuan_izin' %}" class="nav-link">
                 <i class="nav-icon fas fa-clipboard-check"></i>
                 <p>Persetujuan Izin</p>
-              </a>
-            </li>
-            <li class="nav-item active">
-              <a href="{% url 'riwayat_keluar' %}" class="nav-link">
-                <i class="nav-icon fas fa-clipboard-list"></i>
-                <p>Rekap Izin Keluar</p>
               </a>
             </li>
             {% if user.is_admin == 1 %}

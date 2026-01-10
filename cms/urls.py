@@ -51,6 +51,9 @@ urlpatterns = [
 
     path('riwayat_keluar/', riwayat_keluar, name='riwayat_keluar'),
 
+    path('rekap_kehadiran/', rekap_kehadiran, name='rekap_kehadiran'),
+    path('rekap_kehadiran/<str:nik>/', rekap_kehadiran_detail, name='rekap_kehadiran_detail'),
+
     path('err403/', err403, name='err403'),
     path('err404/', err404, name='err404')
 ]

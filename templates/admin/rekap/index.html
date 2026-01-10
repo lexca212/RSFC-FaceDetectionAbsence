@@ -1,0 +1,151 @@
+{% extends 'layouts/layout.html' %}
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- FILTER -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header fw-bold">
+            Filter Rekap Kehadiran
+        </div>
+        <div class="card-body">
+            <form method="GET" class="mb-4">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label>Dari Tanggal</label>
+                        <input type="date" name="start_date" class="form-control"
+                              value="{{ start_date }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Sampai Tanggal</label>
+                        <input type="date" name="end_date" class="form-control"
+                              value="{{ end_date }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-primary w-100">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TABEL REKAP -->
+    <div class="card shadow-sm">
+        <div class="card-header fw-bold">
+            Rekap Kehadiran Karyawan
+        </div>
+        <div class="card-body table-responsive">
+            <table class="table table-bordered table-hover text-center align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class='col-1'>NIK</th>
+                        <th class='col-2'>Nama</th>
+                        <th class='col-2'>Divisi</th>
+                        <th class='col-1'>Hadir</th>
+                        <th class='col-1'>Terlambat</th>
+                        <th class='col-1'>Pulang Cepat</th>
+                        <th class='col-1'>Izin</th>
+                        <th class='col-1'>Cuti</th>
+                        <th class='col-1'>Keluar</th>
+                        <th class='col-1'>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                  {% for row in page_obj %}
+                  <tr>
+                      <td class="text-left">{{ row.nik }}</td>
+                      <td class="text-left">{{ row.nama }}</td>
+                      <td class="text-left">{{ row.divisi }}</td>
+                      <td class="text-success fw-bold">{{ row.hadir }}</td>
+                      <td class="text-warning fw-bold">{{ row.terlambat }}</td>
+                      <td class="text-danger fw-bold">{{ row.pulang_cepat }}</td>
+                      <td>{{ row.izin }}</td>
+                      <td>{{ row.cuti }}</td>
+                      <td>{{ row.keluar }}</td>
+                      <td><a href="{% url 'rekap_kehadiran_detail' row.nik %}?start_date={{ start_date }}&end_date={{ end_date }}"
+                          class="btn btn-info btn-sm">
+                          <i class='fa fa-plus'></i>
+                          </a>
+                      </td>
+                  </tr>
+                  {% empty %}
+                  <tr>
+                      <td colspan="10" class="text-muted">
+                          Silakan pilih rentang tanggal terlebih dahulu
+                      </td>
+                  </tr>
+                  {% endfor %}
+              </tbody>
+            </table>
+        </div>
+        <div class="card-footer clearfix">
+          <div class="row">
+              <div class="col-md-5 d-flex align-items-center">
+                  <div class="dataTables_info">
+                      Menampilkan
+                      {{ page_obj.start_index }} sampai {{ page_obj.end_index }}
+                      dari {{ page_obj.paginator.count }} entri
+                      (Halaman {{ page_obj.number }} dari {{ page_obj.paginator.num_pages }})
+                  </div>
+              </div>
+
+              <div class="col-md-7">
+                  <ul class="pagination pagination-sm m-0 float-right">
+
+                      {% if page_obj.has_previous %}
+                      <li class="page-item">
+                          <a class="page-link"
+                            href="?page=1&{{ query_string }}">&laquo;</a>
+                      </li>
+                      <li class="page-item">
+                          <a class="page-link"
+                            href="?page={{ page_obj.previous_page_number }}&{{ query_string }}">
+                              Sebelumnya
+                          </a>
+                      </li>
+                      {% else %}
+                      <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                      <li class="page-item disabled"><span class="page-link">Sebelumnya</span></li>
+                      {% endif %}
+
+                      {% for num in page_obj.paginator.page_range %}
+                          {% if num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                          <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                              <a class="page-link"
+                                href="?page={{ num }}&{{ query_string }}">
+                                  {{ num }}
+                              </a>
+                          </li>
+                          {% endif %}
+                      {% endfor %}
+
+                      {% if page_obj.has_next %}
+                      <li class="page-item">
+                          <a class="page-link"
+                            href="?page={{ page_obj.next_page_number }}&{{ query_string }}">
+                              Selanjutnya
+                          </a>
+                      </li>
+                      <li class="page-item">
+                          <a class="page-link"
+                            href="?page={{ page_obj.paginator.num_pages }}&{{ query_string }}">&raquo;</a>
+                      </li>
+                      {% else %}
+                      <li class="page-item disabled"><span class="page-link">Selanjutnya</span></li>
+                      <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                      {% endif %}
+
+                  </ul>
+              </div>
+          </div>
+      </div>
+    </div>
+
+</div>
+
+{% endblock %}
