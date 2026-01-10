@@ -101,29 +101,15 @@ scratch. This page gets rid of all links and provides the needed markup only.
         
         <nav class="mt-2">
           <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+            {% if user.is_admin != 0 %}
+            <li class="nav-header">Data Karyawan</li>
+            {% endif %}
+
             {% if user.is_admin == 2 %}
             <li class="nav-item active">
               <a href="{% url 'karyawan' %}" class="nav-link">
                 <i class="nav-icon fa fa-users fa-table"></i>
                 <p>Daftar Karyawan</p>
-              </a>
-            </li>
-            <li class="nav-item active">
-              <a href="{% url 'absen' %}" class="nav-link">
-                <i class="nav-icon fa fa-solid fa-table"></i>
-                <p>Data Presensi</p>
-              </a>
-            </li>
-            <li class="nav-item active">
-              <a href="{% url 'rekap_kehadiran' %}" class="nav-link">
-                <i class="nav-icon fa fa-solid fa-table"></i>
-                <p>Rekap Kehadiran</p>
-              </a>
-            </li>
-            <li class="nav-item active">
-              <a href="{% url 'riwayat_keluar' %}" class="nav-link">
-                <i class="nav-icon fas fa-clipboard-list"></i>
-                <p>Rekap Izin Keluar</p>
               </a>
             </li>
             <li class="nav-item active">
@@ -133,6 +119,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
               </a>
             </li>
             {% endif %}
+
             {% if user.is_admin != 0 %}
             <li class="nav-item active">
               <a href="{% url 'mapping_jadwal' %}" class="nav-link">
@@ -140,6 +127,48 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 <p>Mapping Jadwal Karyawan</p>
               </a>
             </li>
+            {% endif %}
+          </ul>
+        </nav>
+
+        {% if user.is_admin == 2 %}
+        <hr style="background-color:dimgray">
+        {% endif %}
+
+        <nav class="mt-2">
+          <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+            {% if user.is_admin == 2 %}
+            <li class="nav-header">Rekap Data Presnsi</li>
+            <li class="nav-item active">
+              <a href="{% url 'absen' %}" class="nav-link">
+                <i class="nav-icon fa fa-solid fa-table"></i>
+                <p>Data Presensi</p>
+              </a>
+            </li>
+            <li class="nav-item active">
+              <a href="{% url 'rekap_kehadiran' %}" class="nav-link">
+                <i class="nav-icon fas fa-user-check"></i>
+                <p>Rekap Kehadiran Karyawan</p>
+              </a>
+            </li>
+            <li class="nav-item active">
+              <a href="{% url 'riwayat_keluar' %}" class="nav-link">
+                <i class="nav-icon fas fa-clipboard-list"></i>
+                <p>Rekap Izin Keluar</p>
+              </a>
+            </li>
+            {% endif %}
+          </ul>
+        </nav>
+
+        {% if user.is_admin != 0 %}
+        <hr style="background-color:dimgray">
+        {% endif %}
+
+        <nav class="mt-2">
+          <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+            {% if user.is_admin != 0 %}
+            <li class="nav-header">Persetujuan</li>
             <li class="nav-item active">
               <a href="{% url 'persetujuan_cuti' %}" class="nav-link">
                 <i class="nav-icon fa fa-gavel"></i>
@@ -152,14 +181,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 <p>Persetujuan Izin</p>
               </a>
             </li>
-            {% if user.is_admin == 1 %}
+            {% comment %} {% if user.is_admin == 1 %}
             <li class="nav-item">
               <a href="{% url 'jadwal_master' %}" class="nav-link">
                 <i class="fa fa-fw fa-clock nav-icon"></i>
                 <p>Master jadwal</p>
               </a>
             </li>
-            {% endif %}
+            {% endif %} {% endcomment %}
             {% endif %}
           </ul>
         </nav>
