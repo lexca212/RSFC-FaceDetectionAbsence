@@ -253,13 +253,13 @@ def absence(request):
 
             time = MasterSchedules.objects.get(id=existing_absen.schedule.id)
 
-            print(f'Absen pulang shift {existing_absen.shift_order} - {time.start_time}')
+            print(f'Absen pulang tanggal {existing_absen.date_in.date()} shift {existing_absen.shift_order} - {time.start_time}')
 
             return JsonResponse({
                 'status': 'success',
                 'type': 'Pulang',
                 'shift': existing_absen.shift_order,
-                'message': f'Absen pulang shift {time.start_time}',
+                'message': f'Absen pulang tanggal {existing_absen.date_in.date()} shift {time.start_time}',
                 'status_absen': status_out,
                 'nik': user.nik,
                 'name': user.name,
@@ -324,12 +324,12 @@ def absence(request):
                     "time": now.isoformat()
                 }
 
-                print(f'Absen masuk shift {jadwal.shift_order} - {sched.start_time}')
+                print(f'Absen masuk tanggal {jadwal.date} shift {jadwal.shift_order} - {sched.start_time}')
                 return JsonResponse({
                     'status': 'success',
                     'type': 'Masuk',
                     'shift': jadwal.shift_order,
-                    'message': f'Absen masuk shift {jadwal.schedule.start_time}',
+                    'message': f'Absen masuk tanggal {jadwal.date} shift {jadwal.schedule.start_time}',
                     'status_absen': status_in,
                     'nik': user.nik,
                     'name': user.name,
