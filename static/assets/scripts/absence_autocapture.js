@@ -136,7 +136,8 @@ function autoCaptureAndSend() {
       if (response.status === 'success') {
         let content = `
           <div class="mt-3">
-            <p style="background-color: #FFC107; padding:8px; border-radius: 8px; font-weight: bold">${response.message}</p>
+            <p style="background-color: #FFC107; padding:8px; border-radius: 8px; font-weight: bold">Absen ${response.type}</p>
+            <pre>${response.message}</pre>
             <p class="mb-1">
               <strong style="color: ${
                 (response.status_absen === 'Terlambat' || response.status_absen === 'Pulang Cepat') ? '#C82333' :
@@ -156,7 +157,7 @@ function autoCaptureAndSend() {
         mpCamera.stop();
         Swal.fire({
           icon: "question",
-          title: "Konfirmasi Wajah",
+          title: "Data Sesuai Tidak ?",
           html: content,
           showCancelButton: true,
           confirmButtonText: "✅ Sesuai",

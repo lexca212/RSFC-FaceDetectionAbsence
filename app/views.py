@@ -259,7 +259,7 @@ def absence(request):
                 'status': 'success',
                 'type': 'Pulang',
                 'shift': existing_absen.shift_order,
-                'message': f'Absen pulang tanggal {existing_absen.date_in.date()} shift {time.start_time}',
+                'message': f'Tanggal <b>{existing_absen.date_in.date()}</b> shift <b>{time.start_time} - {time.end_time}</b>',
                 'status_absen': status_out,
                 'nik': user.nik,
                 'name': user.name,
@@ -324,12 +324,14 @@ def absence(request):
                     "time": now.isoformat()
                 }
 
+                print(request.session['pending_absence'])
+
                 print(f'Absen masuk tanggal {jadwal.date} shift {jadwal.shift_order} - {sched.start_time}')
                 return JsonResponse({
                     'status': 'success',
                     'type': 'Masuk',
                     'shift': jadwal.shift_order,
-                    'message': f'Absen masuk tanggal {jadwal.date} shift {jadwal.schedule.start_time}',
+                    'message': f'Tanggal <b>{jadwal.date}</b> shift <b>{jadwal.schedule.start_time} - {jadwal.schedule.end_time}</b>',
                     'status_absen': status_in,
                     'nik': user.nik,
                     'name': user.name,
