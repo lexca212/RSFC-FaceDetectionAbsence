@@ -1138,7 +1138,7 @@ def detail_pengajuan(request, id):
     status_choices = (
         ['Pending', 'Approved', 'Rejected']
         if user.is_admin == 1
-        else ['Divisi Approved', 'Approved', 'Rejected', 'Cancelled']
+        else ['Approved', 'Rejected', 'Cancelled']
     )
 
     context = {
