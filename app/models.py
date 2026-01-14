@@ -38,6 +38,13 @@ class InAbsences(models.Model):
     status_out = models.CharField(max_length=20, null=True, blank=True)
     schedule = models.ForeignKey('cms.MasterSchedules', null=True, on_delete=models.SET_NULL)
     shift_order = models.PositiveSmallIntegerField(null=True, blank=True)
+    is_from_leave = models.BooleanField(default=False)
+    leave_request = models.ForeignKey(
+        'cms.LeaveRequests',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

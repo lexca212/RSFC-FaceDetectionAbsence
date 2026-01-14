@@ -1,5 +1,6 @@
 from django.contrib.auth.hashers import make_password, check_password
 from django.shortcuts import render, redirect , get_object_or_404
+from .services.leave_service import apply_leave, revert_leave
 from django.core.files.base import ContentFile
 from django.core.paginator import Paginator
 from django.http import JsonResponse
@@ -1076,111 +1077,76 @@ def persetujuan_cuti(request):
 @admin_required
 def detail_pengajuan(request, id):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
-
     pengajuan = get_object_or_404(LeaveRequests, id=id)
 
     if request.method == 'POST':
         start_date = request.POST['start_date']
         end_date = request.POST['end_date']
-        status = request.POST['status']
+        new_status = request.POST['status']
         note = request.POST['note']
 
         try:
-            pengajuan = get_object_or_404(LeaveRequests, id=id)
-            
-            if user.is_admin == 1 and status == 'Approved':
-                status = 'Divisi Approved'
+            old_status = pengajuan.status  # ⬅️ AMBIL SEBELUM DIUBAH
 
+            # === NORMALISASI STATUS ===
+            if user.is_admin == 1 and new_status == 'Approved':
+                new_status = 'Divisi Approved'
+
+            from datetime import datetime
+
+            start_date = datetime.strptime(
+                request.POST['start_date'], "%Y-%m-%d"
+            ).date()
+
+            end_date = datetime.strptime(
+                request.POST['end_date'], "%Y-%m-%d"
+            ).date()
+
+            # === UPDATE DATA ===
             pengajuan.start_date = start_date
             pengajuan.end_date = end_date
-            pengajuan.status = status
+            pengajuan.status = new_status
             pengajuan.note = note
-
             pengajuan.save()
 
-            if user.is_admin == 2 and status == "Approved":
-                from datetime import datetime, timedelta
-                start = datetime.strptime(start_date, "%Y-%m-%d").date()
-                end = datetime.strptime(end_date, "%Y-%m-%d").date()
+            # === APPLY CUTI (HANYA SEKALI) ===
+            if (
+                user.is_admin == 2 and
+                old_status != "Approved" and
+                new_status == "Approved"
+            ):
+                apply_leave(pengajuan)
 
-                cuti_schedule, created = MasterSchedules.objects.get_or_create(
-                    id="CUTI",
-                    defaults={
-                        "name": "Cuti",
-                        "start_time": "00:00",
-                        "end_time": "00:00"
-                    }
-                )
-
-                current = start
-                while current <= end:
-
-                    sudah_ada_absen = InAbsences.objects.filter(
-                        nik=pengajuan.nik,
-                        date_in__date=current
-                    ).exists()
-
-                    if not sudah_ada_absen:
-                        InAbsences.objects.create(
-                            nik=pengajuan.nik,
-                            date_in=datetime.combine(current, datetime.min.time()),
-                            status_in="Cuti",
-                            date_out=datetime.combine(current, datetime.max.time()),
-                            status_out="Cuti",
-                            schedule=cuti_schedule,
-                            shift_order=1
-                        )
-                    else:
-                        absence = get_object_or_404(InAbsences, nik=pengajuan.nik, date_in__date=current)
-                        try:
-                            absence.status_in="Cuti"
-                            absence.status_out="Cuti"
-                            absence.schedule = cuti_schedule
-                            absence.shift_order= 1
-                            absence.save()
-                        except Exception as e:
-                            messages.error(request, f'Gagal menyimpan data persetujuan pengajuan cuti. Error: {e}')
-                            return redirect('/admins/persetujuan_cuti')
-
-                    sudah_ada_schedule = MappingSchedules.objects.filter(
-                        nik=pengajuan.nik,
-                        date=current
-                    ).exists()
-
-                    if not sudah_ada_schedule:
-                        MappingSchedules.objects.create(
-                            id=f"{pengajuan.nik.nik}_{current}",
-                            nik=pengajuan.nik,
-                            schedule=cuti_schedule,
-                            date=current,
-                            shift_order=1
-                        )
-                    else:
-                        schedule = get_object_or_404(MappingSchedules, nik=pengajuan.nik, date=current)
-                        try:
-                            schedule.schedule = cuti_schedule
-                            schedule.save()
-                        except Exception as e:
-                            messages.error(request, f'Gagal menyimpan data persetujuan pengajuan cuti. Error: {e}')
-                            return redirect('/admins/persetujuan_cuti')
-
-                    current += timedelta(days=1)
+            # === REVERT CUTI ===
+            if (
+                old_status == "Approved" and
+                new_status == "Cancelled"
+            ):
+                revert_leave(pengajuan)
 
             messages.success(request, 'Data persetujuan cuti berhasil disimpan.')
-            return redirect('/admins/persetujuan_cuti') 
-            
-        except Exception as e:
-            messages.error(request, f'Gagal menyimpan data persetujuan pengajuan cuti. Error: {e}')
             return redirect('/admins/persetujuan_cuti')
 
-    status = ['Pending', 'Approved', 'Rejected'] if user.is_admin == 1 else ['Divisi Approved', 'Approved', 'Rejected']
-    context = {
-       'user': user,
-       'pengajuan': pengajuan,
-       'title': 'Detail Pengajuan Cuti Karyawan',
-       'status': status
-    }
+        except Exception as e:
+            messages.error(
+                request,
+                f'Gagal menyimpan data persetujuan pengajuan cuti. Error: {e}'
+            )
+            return redirect('/admins/persetujuan_cuti')
 
+    # === STATUS OPTION UNTUK FORM ===
+    status_choices = (
+        ['Pending', 'Approved', 'Rejected']
+        if user.is_admin == 1
+        else ['Divisi Approved', 'Approved', 'Rejected', 'Cancelled']
+    )
+
+    context = {
+        'user': user,
+        'pengajuan': pengajuan,
+        'title': 'Detail Pengajuan Cuti Karyawan',
+        'status': status_choices
+    }
     return render(request, 'admin/cuti_persetujuan/detail.html', context)
 
 @login_auth

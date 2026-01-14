@@ -21,6 +21,14 @@ class MappingSchedules(models.Model):
     schedule = models.ForeignKey(MasterSchedules, on_delete=models.CASCADE)
     date = models.DateField()
     shift_order = models.PositiveSmallIntegerField(null=True, blank=True)
+    is_from_leave = models.BooleanField(default=False)
+    original_schedule = models.ForeignKey(
+        MasterSchedules,
+        null=True,
+        blank=True,
+        related_name='original_schedule',
+        on_delete=models.SET_NULL
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
