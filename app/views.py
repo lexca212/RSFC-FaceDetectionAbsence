@@ -251,15 +251,19 @@ def absence(request):
                 "time": now.isoformat()
             }
 
+            local_datetime = timezone.localtime(existing_absen.date_in)
+            
+            tanggal_pulang = local_datetime.date()
+
             time = MasterSchedules.objects.get(id=existing_absen.schedule.id)
 
-            print(f'Absen pulang tanggal {existing_absen.date_in.date()} shift {existing_absen.shift_order} - {time.start_time}')
+            print(f'Absen pulang tanggal {tanggal_pulang} shift {existing_absen.shift_order} - {time.start_time}')
 
             return JsonResponse({
                 'status': 'success',
                 'type': 'Pulang',
                 'shift': existing_absen.shift_order,
-                'message': f'Tanggal <b>{existing_absen.date_in.date()}</b> shift <b>{time.start_time} - {time.end_time}</b>',
+                'message': f'Tanggal <b>{tanggal_pulang}</b> shift <b>{time.start_time} - {time.end_time}</b>',
                 'status_absen': status_out,
                 'nik': user.nik,
                 'name': user.name,

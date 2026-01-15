@@ -157,7 +157,7 @@ function autoCaptureAndSend() {
         mpCamera.stop();
         Swal.fire({
           icon: "question",
-          title: "Data Sesuai Tidak ?",
+          title: "Datanya Sesuai Nggak ?",
           html: content,
           showCancelButton: true,
           confirmButtonText: "✅ Sesuai",
