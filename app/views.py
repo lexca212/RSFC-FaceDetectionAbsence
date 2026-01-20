@@ -65,6 +65,14 @@ def detect_glare(img_bytes):
 
     return False, None
 
+def is_long_shift(shift1, shift2, max_gap_minutes=60):
+    from datetime import datetime, timedelta
+    gap = (
+        datetime.combine(date.today(), shift2.start_time) -
+        datetime.combine(date.today(), shift1.end_time)
+    )
+    return timedelta(0) <= gap <= timedelta(minutes=max_gap_minutes)
+
 def absence(request):
     if request.method != 'POST':
         return render(request, 'user/absence.html')
@@ -229,9 +237,84 @@ def absence(request):
             .only("date_in", "schedule")
             .order_by('-date_in')
             .first()
-        )
+        )   
 
         if existing_absen:
+            # ==============================
+            # CEK APAKAH PULANG LONG SHIFT
+            # ==============================
+            long_shift_absen = list(
+                InAbsences.objects.filter(
+                    nik=user,
+                    status_out__isnull=True,
+                    # date_in__gte=now - timedelta(hours=24)
+                )
+                .select_related("schedule").order_by("shift_order")
+            )
+
+            print(long_shift_absen)
+
+            is_long_shift_active = (
+                len(long_shift_absen) == 2 and
+                long_shift_absen[0].date_out is not None and
+                long_shift_absen[1].date_out is None
+            )
+
+            if is_long_shift_active:
+                shift1, shift2 = long_shift_absen
+
+                sched1 = shift1.schedule
+                sched2 = shift2.schedule
+
+                date_in_day1 = shift1.date_in.date()
+                date_in_day2 = shift2.date_in.date()
+
+                end_shift1 = timezone.make_aware(
+                    datetime.combine(date_in_day1, sched1.end_time),
+                    tz_jakarta
+                )
+
+                end_shift2 = timezone.make_aware(
+                    datetime.combine(date_in_day2, sched2.end_time),
+                    tz_jakarta
+                )
+
+                print(f'end_shift1: {end_shift1}, end_shift2: {end_shift2}, now: {now}')
+
+                if end_shift1 <= timezone.localtime(shift1.date_in): 
+                    end_shift1 += timedelta(days=1) 
+                if end_shift2 <= timezone.localtime(shift2.date_in): 
+                    end_shift2 += timedelta(days=1) 
+
+                if now < end_shift1:
+                    status_out = "Pulang Cepat"
+                elif now < end_shift2:
+                    status_out = "Pulang Cepat"
+                else:
+                    status_out = "Tepat Waktu"
+
+                request.session["pending_absence"] = {
+                    "mode": "PULANG_LONG",
+                    "user_id": user.nik,
+                    "time": now.isoformat()
+                }
+
+                return JsonResponse({
+                    "status": "success",
+                    "type": "Pulang (Long Shift)",
+                    "shift": f"{shift1.shift_order}-{shift2.shift_order}",
+                    "message": (
+                        f"Tanggal <b>{today}</b> shift "
+                        f"<b>{sched1.start_time} - {sched2.end_time}</b>"
+                    ),
+                    "status_absen": status_out,
+                    "nik": user.nik,
+                    "name": user.name,
+                    "date": now.strftime('%Y-%m-%d'),
+                    "time": now.strftime('%H:%M:%S'),
+                    "minor_message": "Hati-hati di jalan 🛵"
+                }) 
+        
             sched = existing_absen.schedule
             date_in_day = existing_absen.date_in.date()
 
@@ -297,12 +380,81 @@ def absence(request):
         # ================================
         # ABSEN MASUK (SHIFT BERIKUTNYA)
         # ================================
+        jadwal1 = jadwal_list[0]
+        jadwal2 = jadwal_list[1] if len(jadwal_list) > 1 else None
+
+        # =====================================================
+        # LONG SHIFT (2 SHIFT BERURUTAN)
+        # =====================================================
+        if jadwal2 and is_long_shift(jadwal1.schedule, jadwal2.schedule):
+
+            sudah_masuk = InAbsences.objects.filter(
+                nik=user,
+                date_in__range=(start_of_day, end_of_day),
+                date_in__isnull=False,
+            ).exists()
+
+            if sudah_masuk:
+                print(f'Semua shift sudah absen')
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'{user.name}, Anda sudah absen pulang untuk semua shift hari ini.'
+                })
+
+            sched = jadwal1.schedule
+
+            jadwal_in_today = timezone.make_aware(
+                datetime.combine(today, sched.start_time),
+                tz_jakarta
+            )
+
+            status_in = "Tepat Waktu" if now <= jadwal_in_today else "Terlambat"
+
+            request.session["pending_absence"] = {
+                "mode": "MASUK_LONG",
+                "user_id": user.nik,
+                "today": today.isoformat(),
+                "shifts": [
+                    {
+                        "schedule_id": jadwal1.schedule.id,
+                        "shift_order": jadwal1.shift_order,
+                        "status_in": status_in,
+                        "planned_out": jadwal1.schedule.end_time.isoformat()
+                    },
+                    {
+                        "schedule_id": jadwal2.schedule.id,
+                        "shift_order": jadwal2.shift_order,
+                        "planned_in": jadwal2.schedule.start_time.isoformat()
+                    }
+                ],
+                "actual_in": now.isoformat()
+            }
+
+            return JsonResponse({
+                "status": "success",
+                "type": "Masuk (Long Shift)",
+                "shift": f"{jadwal1.shift_order}-{jadwal2.shift_order}",
+                "message": (
+                    f"Tanggal <b>{today}</b> shift "
+                    f"<b>{jadwal1.schedule.start_time} - {jadwal2.schedule.end_time}</b>"
+                ),
+                "status_absen": status_in,
+                "nik": user.nik,
+                "name": user.name,
+                "date": now.strftime('%Y-%m-%d'),
+                "time": now.strftime('%H:%M:%S'),
+                "minor_message": "Semangat bekerja 💪🏼"
+            })
+
+
+        # =====================================================
+        # NORMAL SHIFT (ABSEN PER SHIFT)
+        # =====================================================
         for jadwal in jadwal_list:
             sudah_masuk = InAbsences.objects.filter(
                 nik=user,
                 shift_order=jadwal.shift_order,
                 date_in__range=(start_of_day, end_of_day),
-                date_out__isnull=False
             ).exists()
 
             if not sudah_masuk:
@@ -324,20 +476,20 @@ def absence(request):
                     "time": now.isoformat()
                 }
 
-                print(request.session['pending_absence'])
-
-                print(f'Absen masuk tanggal {jadwal.date} shift {jadwal.shift_order} - {sched.start_time}')
                 return JsonResponse({
-                    'status': 'success',
-                    'type': 'Masuk',
-                    'shift': jadwal.shift_order,
-                    'message': f'Tanggal <b>{jadwal.date}</b> shift <b>{jadwal.schedule.start_time} - {jadwal.schedule.end_time}</b>',
-                    'status_absen': status_in,
-                    'nik': user.nik,
-                    'name': user.name,
-                    'date': now.strftime('%Y-%m-%d'),
-                    'time': now.strftime('%H:%M:%S'),
-                    'minor_message': 'Semangat Bekerja 💪🏼'
+                    "status": "success",
+                    "type": "Masuk",
+                    "shift": jadwal.shift_order,
+                    "message": (
+                        f"Tanggal <b>{jadwal.date}</b> shift "
+                        f"<b>{sched.start_time} - {sched.end_time}</b>"
+                    ),
+                    "status_absen": status_in,
+                    "nik": user.nik,
+                    "name": user.name,
+                    "date": now.strftime('%Y-%m-%d'),
+                    "time": now.strftime('%H:%M:%S'),
+                    "minor_message": "Semangat bekerja 💪🏼"
                 })
 
         # ================================
@@ -360,6 +512,9 @@ def absence(request):
             default_storage.delete(temp_path)
 
 def confirm_absence(request):
+    from django.utils import timezone
+    from datetime import time
+
     action = request.POST.get("action")
     temp = request.session.get("pending_absence")
 
@@ -370,26 +525,158 @@ def confirm_absence(request):
         del request.session["pending_absence"]
         return JsonResponse({"status": "cancelled"})
 
-    if action == "yes":
-        if temp["mode"] == "MASUK":
-            InAbsences.objects.create(
-                nik_id=temp["user_id"],
-                date_in=temp["time"],
-                status_in=temp["status_in"],
-                schedule_id=temp["schedule_id"],
-                shift_order=temp["shift_order"]
+    if action != "yes":
+        return JsonResponse({"status": "error", "message": "Aksi tidak valid"})
+
+    now = timezone.localtime(timezone.now())
+    today = now.date()
+    tz_jakarta = pytz.timezone('Asia/Jakarta')
+    start_of_day = timezone.make_aware(datetime.combine(today, time.min), tz_jakarta)
+    end_of_day = timezone.make_aware(datetime.combine(today, time.max), tz_jakarta)
+
+    # =====================================================
+    # ABSEN MASUK NORMAL
+    # =====================================================
+    if temp["mode"] == "MASUK":
+        InAbsences.objects.create(
+            nik_id=temp["user_id"],
+            date_in=temp["time"],
+            status_in=temp["status_in"],
+            schedule_id=temp["schedule_id"],
+            shift_order=temp["shift_order"]
+        )
+
+    # =====================================================
+    # ABSEN MASUK LONG SHIFT
+    # =====================================================
+    elif temp["mode"] == "MASUK_LONG":
+        actual_in = datetime.fromisoformat(temp["actual_in"])
+
+        for shift in temp["shifts"]:
+            schedule = MasterSchedules.objects.get(id=shift["schedule_id"])
+
+            # shift 1
+            if "planned_out" in shift:
+                planned_out = datetime.combine(today, schedule.end_time)
+
+                InAbsences.objects.create(
+                    nik_id=temp["user_id"],
+                    schedule=schedule,
+                    shift_order=shift["shift_order"],
+                    date_in=actual_in,
+                    date_out=planned_out,
+                    status_in=shift["status_in"],
+                    status_out=None
+                )
+
+            # shift 2
+            if "planned_in" in shift:
+                planned_in = datetime.combine(today, schedule.start_time)
+
+                InAbsences.objects.create(
+                    nik_id=temp["user_id"],
+                    schedule=schedule,
+                    shift_order=shift["shift_order"],
+                    date_in=planned_in,
+                    status_in="Tepat Waktu"
+                )
+
+    # =====================================================
+    # ABSEN PULANG NORMAL
+    # =====================================================
+    elif temp["mode"] == "PULANG":
+        absen = InAbsences.objects.get(id=temp["absence_id"])
+        absen.date_out = temp["time"]
+        absen.status_out = temp["status_out"]
+        absen.save()
+
+    # =====================================================
+    # ABSEN PULANG LONG SHIFT
+    # =====================================================
+    elif temp["mode"] == "PULANG_LONG": 
+        from django.db import transaction 
+        
+        now_aware = timezone.localtime(timezone.now())
+        
+        with transaction.atomic(): 
+            absens = list(
+                InAbsences.objects
+                .select_for_update()
+                .filter(
+                    nik_id=temp["user_id"],
+                    status_out__isnull=True
+                    # date_in__gte=now - timedelta(hours=24)
+                )
+                .select_related("schedule")
+                .order_by("shift_order")
             )
 
-        if temp["mode"] == "PULANG":
-            absen = InAbsences.objects.get(id=temp["absence_id"])
-            absen.date_out = temp["time"]
-            absen.status_out = temp["status_out"]
-            absen.save()
+            if len(absens) < 2: 
+                return JsonResponse({ "status": "error", "message": "Data shift long tidak lengkap" })
+            
+            shift1, shift2 = absens[0], absens[1] 
 
-        del request.session["pending_absence"]
+            print(f'Shift1 ID: {shift1.id}, Shift2 ID: {shift2.id}')
+            sched1, sched2 = shift1.schedule, shift2.schedule
 
-        message = 'Semangat Bekerja 💪🏼' if temp["mode"] == "MASUK" else 'Hati-hati di Jalan 🛵'
-        return JsonResponse({'status': 'success', 'minor_message': message})
+            date_in_day1 = shift1.date_in.date()
+            date_in_day2 = shift2.date_in.date()
+            
+            end1 = timezone.make_aware(datetime.combine(date_in_day1, sched1.end_time), tz_jakarta)
+            end2 = timezone.make_aware(datetime.combine(date_in_day2, sched2.end_time), tz_jakarta)
+            shift1datein = timezone.localtime(shift1.date_in)
+            print(f'end1: {end1}, {shift1datein}')
+            
+            if end1 <= timezone.localtime(shift1.date_in): 
+                end1 += timedelta(days=1) 
+            if end2 <= timezone.localtime(shift2.date_in): 
+                end2 += timedelta(days=1) 
+
+            print(f'end1: {end1}, end2: {end2}, now: {now_aware}')
+                
+            if now_aware < end1: 
+                # KASUS 1: Pulang Cepat di Shift 1
+                shift1.date_out = now_aware 
+                shift1.status_out = "Pulang Cepat" 
+                shift1.save() 
+                shift2.delete()
+                
+            elif now_aware < end2: 
+                # KASUS 2: Pulang di tengah Shift 2
+                shift1.date_out = end1
+                shift1.status_out = "Tepat Waktu" 
+                shift1.save() 
+                
+                shift2.date_out = now_aware 
+                shift2.status_out = "Pulang Cepat" 
+                shift2.save() 
+                
+            else: 
+                # KASUS 3: Pulang Tepat Waktu (Setelah Shift 2 Selesai)
+                shift1.date_out = end1
+                shift1.status_out = "Tepat Waktu" 
+                shift1.save() 
+                
+                shift2.date_out = now_aware 
+                shift2.status_out = "Tepat Waktu" 
+                shift2.save()
+
+    else:
+        return JsonResponse({"status": "error", "message": "Mode absensi tidak dikenal"})
+
+    del request.session["pending_absence"]
+
+    message = (
+        "Semangat bekerja 💪🏼"
+        if "MASUK" in temp["mode"]
+        else "Hati-hati di jalan 🛵"
+    )
+
+    return JsonResponse({
+        "status": "success",
+        "minor_message": message
+    })
+
 
 @login_auth
 def pengajuan_cuti(request):
