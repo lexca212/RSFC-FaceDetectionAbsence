@@ -181,6 +181,12 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 <p>Persetujuan Izin</p>
               </a>
             </li>
+            <li class="nav-item active">
+              <a href="{% url 'lembur' %}" class="nav-link">
+                <i class="nav-icon far fa-clock"></i>
+                <p>Persetujuan Lembur</p>
+              </a>
+            </li>
             {% comment %} {% if user.is_admin == 1 %}
             <li class="nav-item">
               <a href="{% url 'jadwal_master' %}" class="nav-link">

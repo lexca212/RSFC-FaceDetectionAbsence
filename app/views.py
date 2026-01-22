@@ -758,7 +758,7 @@ def overtime(request):
                 "type": "Pulang Lembur",
                 "shift": "-",
                 "message": f"Tanggal <b>{active_ot.start_date.date()}</b>. Total <b>{duration_minutes}</b>",
-                "status_absen": 'Submitted',
+                "status_absen": 'Draft',
                 "nik": user.nik,
                 "name": user.name,
                 "date": now.strftime('%Y-%m-%d'),
@@ -769,6 +769,17 @@ def overtime(request):
         # ======================
         # MASUK LEMBUR
         # ======================
+        sedang_kerja = InAbsences.objects.filter(
+            nik=user,
+            date_out__isnull=True
+        )
+
+        if sedang_kerja.exists():
+            return JsonResponse({
+                "status": "error",
+                "message": f"{user.name}, status Anda 'Sedang Bekerja'. Silakan absen pulang terlebih dahulu, jika ingin mengajukan lembur."
+            })
+        
         request.session["pending_overtime"] = {
             "mode": "MASUK",
             "user_id": user.nik,
@@ -821,7 +832,6 @@ def confirm_overtime(request):
     elif temp["mode"] == "PULANG":
         ot = Overtimes.objects.get(id=temp["overtime_id"])
         ot.end_date = temp["time"]
-        ot.status = "SUBMITTED"
         ot.duration_minutes = temp["duration_minutes"]
         ot.save()
 

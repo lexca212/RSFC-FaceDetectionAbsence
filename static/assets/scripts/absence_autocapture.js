@@ -145,7 +145,7 @@ function autoCaptureAndSend() {
             <p class="mb-1">
               <strong style="color: ${
                 (response.status_absen === 'Terlambat' || response.status_absen === 'Pulang Cepat') ? '#C82333' :
-                (response.status_absen === 'Tepat Waktu' ? '#56AEDA' : 'black')
+                (response.status_absen === 'Tepat Waktu' || response.status_absen === 'Draft') ? '#56AEDA' : 'black'
               };">${response.status_absen}</strong>
             </p>
             <p class="mb-1"><strong>${response.time}</strong></p>
