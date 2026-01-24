@@ -458,6 +458,56 @@ def addUser(request):
 
 @login_auth
 @admin_required
+@superadmin_required
+def update_encode(request, nik):
+    user = get_object_or_404(Users, nik=nik)
+
+    if request.method == 'POST':
+        photo_data = request.POST.get('photo', '')
+
+        if photo_data:
+            try:
+                format, imgstr = photo_data.split(';base64,')
+                ext = format.split('/')[-1]
+                img_bytes = base64.b64decode(imgstr)
+                
+                photo_file = ContentFile(img_bytes, name=f'{nik}.{ext}')
+
+                image_stream = io.BytesIO(img_bytes)
+                loaded_image = face_recognition.load_image_file(image_stream, mode='RGB')
+                
+                encodings = face_recognition.face_encodings(loaded_image)
+
+                if len(encodings) == 0:
+                    return JsonResponse({'status': 'error', 'message': 'Wajah tidak terdeteksi dalam foto. Pendaftaran dibatalkan.' })
+                
+                face_enc = encodings[0] 
+                
+                serialized_encoding = pickle.dumps(face_enc)
+                
+                user.photo=photo_file
+                user.face_encoding=serialized_encoding
+                user.save()
+
+                cache.delete("known_face_encodings")
+                cache.delete("known_face_users")
+
+                return JsonResponse({'status': 'success', 'message': 'Data karyawan berhasil diupload dan encoding wajah disimpan.'})
+            
+            except Exception as e:
+                print(f"Error detail: {e}") 
+                return JsonResponse({'status': 'error', 'message': 'Gagal mengupload data karyawan atau menghitung encoding: {e}' })
+                
+        else:
+            return JsonResponse({ 'status': 'error', 'message': 'Foto tidak tersedia atau tidak valid.' })
+    
+    context = {
+        'user': user
+    }
+    return render(request, 'admin/users/updateEncode.html', context)
+
+@login_auth
+@admin_required
 def mapping_jadwal(request):
     user = get_object_or_404(Users, nik=request.session['nik_id'])
     # divisi_list = MasterDivisions.objects.filter(id=user.divisi)

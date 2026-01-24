@@ -18,6 +18,7 @@ urlpatterns = [
     path('jadwal/delete/<str:id>', deleteJadwal, name='deleteJadwal'),
 
     path('addUser/', addUser, name='addUser'),
+    path('update_encode/<str:nik>/', update_encode, name='update_encode'),
 
     path('mapping_jadwal/', mapping_jadwal, name='mapping_jadwal'),
     path('mapping_jadwal/add/', buat_jadwal, name='buat_jadwal'),
