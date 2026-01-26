@@ -1301,6 +1301,7 @@ def edit_pengajuan_izin(request, id):
         pengajuan.start_date = start_date
         pengajuan.end_date = end_date
         pengajuan.reason = reason
+        pengajuan.status = 'Pending'
         pengajuan.user_target = boss_obj
 
         if photo_file:

@@ -29,6 +29,13 @@ class MappingSchedules(models.Model):
         related_name='original_schedule',
         on_delete=models.SET_NULL
     )
+    is_from_permission = models.BooleanField(default=False)
+    original_schedule_permission = models.ForeignKey(
+        MasterSchedules,
+        null=True, blank=True,
+        related_name='permission_original_schedule',
+        on_delete=models.SET_NULL
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

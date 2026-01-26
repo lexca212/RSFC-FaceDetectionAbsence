@@ -106,11 +106,11 @@
                   {% endif %}
                 </td>
                 <td>
-                  {% if pengajuan.status == 'Approved' %}
+                  {% comment %} {% if pengajuan.status == 'Approved' %}
                   <span class="badge badge-info"  style="font-size: 18px;">{{ pengajuan.status }}</span>
-                  {% else %}
+                  {% else %} {% endcomment %}
                   <a href="{% url 'detail_pengajuan_izin' pengajuan.id %}" class="btn btn-sm btn-info my-1"><i class="fa fa-search-plus"></i> Detail</a> 
-                  {% endif %}
+                  {% comment %} {% endif %} {% endcomment %}
                 </td>
               </tr>
               {% endfor %}

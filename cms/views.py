@@ -1,3 +1,4 @@
+from .services.permission_service import apply_permission, revert_permission
 from django.contrib.auth.hashers import make_password, check_password
 from django.shortcuts import render, redirect , get_object_or_404
 from .services.leave_service import apply_leave, revert_leave
@@ -1100,7 +1101,7 @@ def persetujuan_cuti(request):
 
     elif user.is_admin == 2:
         status_filter = ['Divisi Approved']
-        status_exclude = ['Pending', 'Divisi Approved', 'Rejected']
+        status_exclude = ['Pending', 'Divisi Approved']
         base_filter = {}
 
     pengajuan_list = LeaveRequests.objects.filter(
@@ -1136,7 +1137,7 @@ def detail_pengajuan(request, id):
         note = request.POST['note']
 
         try:
-            old_status = pengajuan.status  # ⬅️ AMBIL SEBELUM DIUBAH
+            old_status = pengajuan.status 
 
             # === NORMALISASI STATUS ===
             if user.is_admin == 1 and new_status == 'Approved':
@@ -1450,7 +1451,7 @@ def persetujuan_izin(request):
 
     elif user.is_admin == 2:
         status_filter = ['Divisi Approved']
-        status_exclude = ['Pending', 'Divisi Approved', 'Rejected']
+        status_exclude = ['Pending', 'Divisi Approved']
         base_filter = {}
 
     pengajuan_list = PermissionRequests.objects.filter(
@@ -1484,77 +1485,48 @@ def detail_pengajuan_izin(request, id):
     if request.method == 'POST':
         start_date = request.POST.get('start_date')
         end_date = request.POST.get('end_date')
-        status = request.POST.get('status')
+        new_status = request.POST.get('status')
         note = request.POST.get('note')
 
         try:
-            if user.is_admin == 1 and status == 'Approved':
-                status = 'Divisi Approved'
+            old_status = pengajuan.status
 
+            if old_status == 'Approved' and new_status == "Cancelled" and user.is_admin != 2:
+                messages.error(request, "Pembatalan izin hanya dapat dilakukan oleh HRD.")
+                return redirect('/admins/persetujuan_izin')
+
+            # === NORMALISASI STATUS ===
+            if user.is_admin == 1 and new_status == 'Approved':
+                new_status = 'Divisi Approved'
+
+            from datetime import datetime
+
+            start_date = datetime.strptime(
+                request.POST['start_date'], "%Y-%m-%d"
+            ).date()
+
+            end_date = datetime.strptime(
+                request.POST['end_date'], "%Y-%m-%d"
+            ).date()
+
+            # === UPDATE DATA PENGAJUAN ===
             pengajuan.start_date = start_date
             pengajuan.end_date = end_date
-            pengajuan.status = status
+            pengajuan.status = new_status
             pengajuan.note = note
             pengajuan.save()
 
-            if user.is_admin == 2 and status == "Approved":
-                from datetime import datetime, timedelta
-                start = datetime.strptime(start_date, "%Y-%m-%d").date()
-                end = datetime.strptime(end_date, "%Y-%m-%d").date()
+            # === APPLY IZIN ===
+            if user.is_admin == 2 and new_status == "Approved" and old_status != "Approved":
+                apply_permission(pengajuan)
 
-                izin_schedule, _ = MasterSchedules.objects.get_or_create(
-                    id="IZIN",
-                    defaults={
-                        "name": "Izin",
-                        "start_time": "00:00",
-                        "end_time": "00:00"
-                    }
-                )
-
-                current = start
-                while current <= end:
-
-                    absence = InAbsences.objects.filter(
-                        nik=pengajuan.nik,
-                        date_in__date=current
-                    ).first()
-
-                    if absence:
-                        absence.status_in = "Izin"
-                        absence.status_out = "Izin"
-                        absence.schedule = izin_schedule
-                        absence.shift_order = 1
-                        absence.save()
-                    else:
-                        InAbsences.objects.create(
-                            nik=pengajuan.nik,
-                            date_in=datetime.combine(current, datetime.min.time()),
-                            status_in="Izin",
-                            date_out=datetime.combine(current, datetime.max.time()),
-                            status_out="Izin",
-                            schedule=izin_schedule,
-                            shift_order=1
-                        )
-
-                    schedule = MappingSchedules.objects.filter(
-                        nik=pengajuan.nik,
-                        date=current
-                    ).first()
-
-                    if schedule:
-                        schedule.schedule = izin_schedule
-                        schedule.shift_order = 1
-                        schedule.save()
-                    else:
-                        MappingSchedules.objects.create(
-                            id=f"{pengajuan.nik.nik}_{current}",
-                            nik=pengajuan.nik,
-                            schedule=izin_schedule,
-                            date=current,
-                            shift_order=1
-                        )
-
-                    current += timedelta(days=1)
+            # === CANCEL IZIN ===
+            if (
+                user.is_admin == 2
+                and old_status == "Approved"
+                and new_status == "Cancelled"
+            ):
+                revert_permission(pengajuan)
 
             messages.success(request, 'Data persetujuan izin berhasil disimpan.')
             return redirect('/admins/persetujuan_izin')
@@ -1569,7 +1541,7 @@ def detail_pengajuan_izin(request, id):
     status = (
         ['Pending', 'Approved', 'Rejected']
         if user.is_admin == 1
-        else ['Divisi Approved', 'Approved', 'Rejected']
+        else ['Approved', 'Rejected', 'Cancelled']
     )
 
     context = {

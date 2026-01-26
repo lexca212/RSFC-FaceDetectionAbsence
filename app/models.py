@@ -45,6 +45,12 @@ class InAbsences(models.Model):
         blank=True,
         on_delete=models.CASCADE
     )
+    is_from_permission = models.BooleanField(default=False)
+    permission_request = models.ForeignKey(
+        'app.PermissionRequests',
+        null=True, blank=True,
+        on_delete=models.CASCADE
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
