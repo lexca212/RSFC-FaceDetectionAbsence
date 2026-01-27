@@ -2,49 +2,69 @@
 {% block content %}
 
 <style>
-    /* Kolom pertama (Nama Karyawan) tetap saat scroll */
-    .sticky-col {
-        position: sticky;
-        left: 0;
-        background: white;
-        z-index: 10;
-    }
+/* =========================
+   SCROLL CONTAINER
+========================= */
+.table-responsive {
+    max-height: 75vh;
+    overflow: auto;
+}
 
-    /* Header kolom pertama */
-    .sticky-col-header {
-        position: sticky;
-        left: 0;
-        background: #6c757d; /* sama seperti header abu-abu */
-        color: white;
-        z-index: 11;
-    } 
+/* =========================
+   TABLE SIZE
+========================= */
+table.table-sm td,
+table.table-sm th {
+    padding: 4px !important;
+    font-size: 13px;
+}
 
-    table.table-sm td,
-    table.table-sm th {
-        padding: 4px !important;
-        font-size: 13px;
-    }
+.col-tanggal {
+    min-width: 100px;
+    white-space: nowrap;
+}
 
-    select.form-control-sm {
-        padding: 1px 4px !important;
-        height: 28px;
-    }
+/* =========================
+   HEADER TANGGAL (KECUALI KOLOM NAMA)
+========================= */
+.table thead th:not(.sticky-col-header) {
+    position: sticky;
+    top: 0;
+    background: #6c757d;
+    color: white;
+    z-index: 10;
+}
 
-    .table-responsive {
-        max-height: 75vh;
-        overflow-x: auto;
-        overflow-y: auto;
-    }
-    .col-tanggal {
-        min-width: 100px;
-        white-space: nowrap;
-    }
+/* =========================
+   KOLOM NAMA (BODY)
+========================= */
+.sticky-col {
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 5;
+}
 
-    .table-responsive {
-        overflow-x: auto;
-        overflow-y: auto;
-        max-height: 75vh;
-    }
+/* =========================
+   HEADER NAMA (POJOK KIRI ATAS)
+========================= */
+.sticky-col-header {
+    position: sticky;
+    top: 0;
+    left: 0;
+    background: #6c757d;
+    color: white;
+    z-index: 30; /* MUTLAK PALING ATAS */
+}
+
+/* =========================
+   SELECT SIZE
+========================= */
+select.form-control-sm {
+    padding: 1px 4px !important;
+    height: 28px;
+}
+
 </style>
 
 <div class="card">
