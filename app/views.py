@@ -3,10 +3,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.core.files.storage import default_storage
 from django.contrib.auth.hashers import make_password
 from django.core.files.base import ContentFile  
+from django.conf import settings
 from datetime import datetime, timedelta
 from cms.decorators import login_auth
 from django.utils.timezone import now
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from datetime import date, datetime
 from django.core.cache import cache
@@ -19,10 +20,54 @@ import calendar
 import base64
 import pickle
 import pytz
+import json
 import cv2
 import io
+import os
 
 # Create your views here.
+
+def firebase_messaging_sw(request):
+    sw_path = os.path.join(settings.BASE_DIR, 'static/firebase-messaging-sw.js')
+
+    try:
+        with open(sw_path, 'r') as f:
+            content = f.read()
+        response = HttpResponse(content, content_type='application/javascript')
+        response["Service-Worker-Allowed"] = "/"
+        return response
+    except FileNotFoundError:
+        return HttpResponse("Service wroker not found.", status=404)
+    
+@login_auth
+@login_auth
+def save_fcm_token(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid method'}, status=405)
+
+    try:
+        nik = request.session.get('nik_id')
+        if not nik:
+            return JsonResponse({'error': 'Not authenticated'}, status=401)
+
+        user = get_object_or_404(Users, nik=nik)
+
+        data = json.loads(request.body)
+        token = data.get('token')
+
+        if not token:
+            return JsonResponse({'error': 'Token missing'}, status=400)
+
+        FCMToken.objects.update_or_create(
+            token=token,
+            defaults={'nik': user}
+        )
+
+        return JsonResponse({'status': 'ok'})
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
 
 def calculate_dynamic_threshold(encodings, safety_factor=0.85):
     if len(encodings) < 2:
@@ -320,7 +365,7 @@ def absence(request):
 
             if jadwal_out < jadwal_in:
                 jadwal_out += timedelta(days=1)
-
+ 
             status_out = "Pulang Cepat" if now < jadwal_out else "Tepat Waktu"
 
             # if existing_absen:
@@ -461,6 +506,8 @@ def absence(request):
                     datetime.combine(today, sched.start_time),
                     tz_jakarta
                 )
+
+                print(now, jadwal_in_today)
 
                 status_in = "Tepat Waktu" if now <= jadwal_in_today else "Terlambat"
 
@@ -910,7 +957,34 @@ def pengajuan_cuti(request):
         # if photo_file:
         #     new_leave_request.photo = photo_file
 
-        new_leave_request.save()
+        # new_leave_request.save()
+
+        from utils.send_fcm_to_user import send_fcm_to_user
+        from django.db import transaction
+
+        with transaction.atomic():
+            new_leave_request.save()
+
+            transaction.on_commit(lambda: send_fcm_to_user(
+                user=boss_obj,
+                title="Pengajuan Cuti Baru",
+                body=f"{user.name} mengajukan cuti {start_date} s/d {end_date}",
+                data={
+                    "type": "cuti",
+                    "leave_id": str(new_leave_request.id),
+                }
+            ))
+
+        # setelah save
+        # send_fcm_to_user(
+        #     user=boss_obj,
+        #     title="Pengajuan Cuti Baru",
+        #     body=f"{user.name} mengajukan cuti {start_date} s/d {end_date}",
+        #     data={
+        #         "type": "cuti",
+        #         "leave_id": str(new_leave_request.id),
+        #     }
+        # )
 
         messages.success(request, 'Pengajuan cuti berhasil diupload.')
         return redirect('/users/pengajuan_cuti')

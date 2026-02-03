@@ -17,8 +17,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from cms.views import err404 
+from app.views import firebase_messaging_sw
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,6 +28,8 @@ urlpatterns = [
     path('users/', include('app.urls')),
 
     path('admins/', include('cms.urls')),
+
+    path('firebase-messaging-sw.js', firebase_messaging_sw, name='firebase-messaging-sw.js')
 ]
 
 if settings.DEBUG:

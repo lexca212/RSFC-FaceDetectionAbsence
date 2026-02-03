@@ -25,4 +25,6 @@ urlpatterns = [
 
     path('pengajuan_lembur/', pengajuan_lembur, name='pengajuan_lembur'),
     path('pengajuan_lembur/<int:id>', detail_pengajuan_lembur, name='detail_pengajuan_lembur'),
+
+    path('save_fcm_token/', save_fcm_token, name='save_fcm_token')
 ]

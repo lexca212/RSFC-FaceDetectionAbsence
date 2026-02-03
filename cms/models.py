@@ -68,3 +68,8 @@ class MasterPermission(models.Model):
     is_requires_attachment = models.BooleanField(default=False)
     max_per_month = models.IntegerField(null=True, blank=True)
 
+class FCMToken(models.Model):
+    id = models.AutoField(primary_key=True)
+    nik = models.ForeignKey('app.Users', on_delete=models.CASCADE)
+    token = models.TextField(unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)

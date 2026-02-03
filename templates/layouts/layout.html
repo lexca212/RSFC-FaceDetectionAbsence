@@ -365,6 +365,85 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
   <!-- REQUIRED SCRIPTS -->
 
+  <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+      import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-messaging.js";
+
+      const SAVE_FCM_URL = "{% url 'save_fcm_token' %}";
+      
+      const firebaseConfig = {
+        apiKey: "AIzaSyA0ckDWB1lcYk1lXgqJ5XJrQoR5MkFSr6w",
+        authDomain: "asidewamessages.firebaseapp.com",
+        projectId: "asidewamessages",
+        storageBucket: "asidewamessages.firebasestorage.app",
+        messagingSenderId: "246438412870",
+        appId: "1:246438412870:web:1fa75e1944e69657a08047",
+        measurementId: "G-5LH2F28K1V"
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const messaging = getMessaging(app);
+      const vapidKey = "BFx2_9UghJosmbT1VVzaCRDoBqzo913DyzalTwFUGOTIL16y-HObCFaDmeDImsvVjZ091umtofRqyw0p7Xu0x4g"; // From app settings >> 'cloud messaging' tab >> key pair. 
+      const btn = document.getElementById('enable-notifications');
+
+      // Get CSRF token from cookie
+      const getCSRF = () => {
+            const match = document.cookie.match(/csrftoken=([^;]+)/);
+            return match ? match[1] : null;
+      };
+
+      const saveToken = (token) => {
+      fetch('/users/save_fcm_token/', { // Here update the API endpoint as per your setup.
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRF(),
+            },
+            credentials: 'include',
+            body: JSON.stringify({ token })
+      })
+      .then(res => res.json())
+      .then(data => console.log('Token saved:', data))
+      .catch(err => console.error('Save failed:', err));
+      };
+
+      const requestAndSendToken = (registration) => {
+            getToken(messaging, { vapidKey, serviceWorkerRegistration: registration })
+            .then((token) => {
+            if (token) {
+                console.log("FCM Token:", token);
+                saveToken(token);
+            } else {
+                console.warn("No token available.");
+            }
+            })
+            .catch(err => console.error("Token error:", err));
+      };
+
+      if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/firebase-messaging-sw.js')
+                .then((reg) => {
+                console.log('Service Worker registered');
+      
+            if (Notification.permission === 'granted') {
+                requestAndSendToken(reg);
+            } else if (Notification.permission !== 'denied') {
+                btn.style.display = 'inline-block';
+                btn.addEventListener('click', () => {
+                Notification.requestPermission().then(permission => {
+                      if (permission === 'granted') requestAndSendToken(reg);
+                      else console.warn("Permission denied by user.");
+                });
+                });
+            } else {
+                console.warn("Notifications denied earlier.");
+            }
+            })
+            .catch(err => console.error("SW registration failed:", err));
+      }
+  </script>
+
   <!-- jQuery -->
   <script src="{% static 'assets/plugins/jquery/jquery.min.js' %}"></script>
   <!-- Bootstrap 4 -->
