@@ -17,7 +17,6 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from cms.views import err404 
-from app.views import firebase_messaging_sw
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
