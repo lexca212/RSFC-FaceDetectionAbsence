@@ -310,8 +310,14 @@ def absence(request):
                     "time": now.strftime('%H:%M:%S'),
                     "minor_message": "Hati-hati di jalan 🛵"
                 }) 
-        
+            
             sched = existing_absen.schedule
+            if not sched:
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': f'Data jadwal ID: {sched.id} pada absen masuk Anda tidak ditemukan. Hubungi Admin.'
+                })
+        
             date_in_day = existing_absen.date_in.date()
 
             jadwal_in = timezone.make_aware(datetime.combine(date_in_day, sched.start_time), tz_jakarta)
@@ -383,6 +389,8 @@ def absence(request):
         # LONG SHIFT (2 SHIFT BERURUTAN)
         # =====================================================
         if jadwal2 and is_long_shift(jadwal1.schedule, jadwal2.schedule):
+            if not jadwal1.schedule or not jadwal2.schedule:
+                return JsonResponse({'status': 'error', 'message': f'Data jadwal ID: {jadwal1.id}/ID: {jadwal2.id} Anda tidak ditemukan. Hubungi Admin.'})
 
             sudah_masuk = InAbsences.objects.filter(
                 nik=user,
@@ -455,6 +463,12 @@ def absence(request):
 
             if not sudah_masuk:
                 sched = jadwal.schedule
+
+                if not sched:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': f'Data jadwal ID: {jadwal.id} tidak ditemukan. Hubungi Admin.'
+                    })
 
                 jadwal_in_today = timezone.make_aware(
                     datetime.combine(today, sched.start_time),
