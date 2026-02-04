@@ -65,6 +65,9 @@ def err403(request):
 def err404(request, exception, template_name='admin/404.html'):
     return render(request, template_name, status=404)
 
+def dekstop_only403(request):
+    return render(request, 'admin/dekstop_only403.html', status=403)
+
 @login_auth 
 @admin_required
 @superadmin_required

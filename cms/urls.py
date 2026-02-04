@@ -1,3 +1,4 @@
+from django.contrib.auth import views as auth_views
 from django.urls import path
 from .views import *
 
@@ -60,5 +61,6 @@ urlpatterns = [
     path('lembur/<int:id>/', detail_lembur, name='detail_lembur'),
 
     path('err403/', err403, name='err403'),
-    path('err404/', err404, name='err404')
+    path('err404/', err404, name='err404'),
+    path('dekstop_only403/', dekstop_only403, name='dekstop_only403')
 ]
