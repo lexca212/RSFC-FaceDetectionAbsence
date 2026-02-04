@@ -231,8 +231,8 @@ def absence(request):
         # ABSEN PULANG (SHIFT AKTIF)
         # ================================
         existing_absen = (
-            InAbsences.objects.filter(nik=user, date_out__isnull=True)
-            .only("date_in", "schedule")
+            InAbsences.objects.filter(nik=user, date_out__isnull=True, schedule__isnull=False)
+            .select_related("schedule")
             .order_by('-date_in')
             .first()
         )   
@@ -317,7 +317,7 @@ def absence(request):
             if not sched:
                 return JsonResponse({
                     'status': 'error', 
-                    'message': f'Data jadwal ID: {sched.id} pada absen masuk Anda tidak ditemukan. Hubungi Admin.'
+                    'message': f'Data jadwal pada absen masuk Anda tidak ditemukan. Hubungi Admin.'
                 })
         
             date_in_day = existing_absen.date_in.date()
@@ -392,7 +392,7 @@ def absence(request):
         # =====================================================
         if jadwal2 and is_long_shift(jadwal1.schedule, jadwal2.schedule):
             if not jadwal1.schedule or not jadwal2.schedule:
-                return JsonResponse({'status': 'error', 'message': f'Data jadwal ID: {jadwal1.id}/ID: {jadwal2.id} Anda tidak ditemukan. Hubungi Admin.'})
+                return JsonResponse({'status': 'error', 'message': f'Data jadwal (Long Shift) Anda tidak ditemukan. Hubungi Admin.'})
 
             sudah_masuk = InAbsences.objects.filter(
                 nik=user,
@@ -469,7 +469,7 @@ def absence(request):
                 if not sched:
                     return JsonResponse({
                         'status': 'error',
-                        'message': f'Data jadwal ID: {jadwal.id} tidak ditemukan. Hubungi Admin.'
+                        'message': f'Data jadwal Anda tidak ditemukan. Hubungi Admin.'
                     })
 
                 jadwal_in_today = timezone.make_aware(
@@ -521,6 +521,7 @@ def absence(request):
             'message': f'Error: {str(e)}'
         })
 
+@dekstop_only
 def confirm_absence(request):
     from django.utils import timezone
     from datetime import time
@@ -687,6 +688,7 @@ def confirm_absence(request):
         "minor_message": message
     })
 
+@desktop_only
 def overtime(request):
     if request.method != 'POST':
         return render(request, 'user/absence.html')
@@ -822,7 +824,8 @@ def overtime(request):
             'status': 'error',
             'message': f'Error: {str(e)}'
         })
-    
+
+@desktop_only
 def confirm_overtime(request):
     from django.utils import timezone
 
