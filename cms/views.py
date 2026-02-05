@@ -1228,6 +1228,10 @@ def detail_pengajuan(request, id):
         try:
             old_status = pengajuan.status 
 
+            if old_status == 'Approved' and new_status == "Cancelled" and user.is_admin != 2:
+                messages.error(request, "Pembatalan cuti hanya dapat dilakukan oleh HRD.")
+                return redirect('/admins/persetujuan_cuti')
+
             # === NORMALISASI STATUS ===
             if user.is_admin == 1 and new_status == 'Approved':
                 new_status = 'Divisi Approved'
@@ -1275,11 +1279,15 @@ def detail_pengajuan(request, id):
             return redirect('/admins/persetujuan_cuti')
 
     # === STATUS OPTION UNTUK FORM ===
-    status_choices = (
-        ['Pending', 'Approved', 'Rejected']
-        if user.is_admin == 1
-        else ['Approved', 'Rejected', 'Cancelled']
-    )
+    if pengajuan.status == 'Approved':
+        status_choices = ( ['Approved', 'Cancelled'] )
+    else:
+        status_choices = (
+            ['Pending', 'Approved', 'Rejected',  'Cancelled']
+            if user.is_admin == 1
+            else ['Divisi Approved', 'Approved', 'Rejected', 'Cancelled']
+        )
+    
 
     context = {
         'user': user,
@@ -1627,17 +1635,20 @@ def detail_pengajuan_izin(request, id):
             )
             return redirect('/admins/persetujuan_izin')
 
-    status = (
-        ['Pending', 'Approved', 'Rejected']
-        if user.is_admin == 1
-        else ['Approved', 'Rejected', 'Cancelled']
-    )
+    if pengajuan.status == 'Approved':
+        status_choices = ( ['Approved', 'Cancelled'] )
+    else:
+        status_choices = (
+            ['Pending', 'Approved', 'Rejected',  'Cancelled']
+            if user.is_admin == 1
+            else ['Divisi Approved', 'Approved', 'Rejected', 'Cancelled']
+        )
 
     context = {
         'user': user,
         'pengajuan': pengajuan,
         'title': 'Detail Pengajuan Izin Karyawan',
-        'status': status
+        'status': status_choices
     }
 
     return render(request, 'admin/izin_persetujuan/detail.html', context)
