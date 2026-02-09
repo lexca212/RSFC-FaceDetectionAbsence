@@ -1288,6 +1288,22 @@ def pengajuan_izin(request):
             photo=photo_file
         )
 
+        if boss_obj.telegram_chat_id:
+            message = f"""
+📢 <b>Pengajuan Izin Baru</b>
+
+Nama: {user.name}
+Jenis: {permission_type.name}
+Tanggal: {start_date} s.d. {end_date}
+Alasan: {reason}
+
+https://s.id/asidewa
+
+Silakan klik tautan di atas dan pilih menu <b>Persetujuan Izin</b> untuk melakukan approval.
+            """
+
+            send_telegram_message(boss_obj.telegram_chat_id, message)
+
         messages.success(
             request,
             format_html(
@@ -1362,6 +1378,22 @@ def edit_pengajuan_izin(request, id):
             pengajuan.photo = photo_file
 
         pengajuan.save()
+
+        if pengajuan and boss_obj.telegram_chat_id:
+            message = f"""
+📢 <b>Pengajuan Izin Baru</b>
+
+Nama: {user.name}
+Jenis: {permission_type.name}
+Tanggal: {start_date} s.d. {end_date}
+Alasan: {reason}
+
+https://s.id/asidewa
+
+Silakan klik tautan di atas dan pilih menu <b>Persetujuan Izin</b> untuk melakukan approval.
+            """
+
+            send_telegram_message(boss_obj.telegram_chat_id, message)
 
         messages.success(
             request,
@@ -1531,11 +1563,41 @@ def detail_pengajuan_lembur(request, id):
         lembur = get_object_or_404(Overtimes, id=id)
 
         if approved_by and reason:
+            
+            from django.utils import timezone
+            tz_jakarta = pytz.timezone('Asia/Jakarta')
+            
             boss_obj = get_object_or_404(Users, nik=approved_by)
+            
             lembur.approved_by = boss_obj
             lembur.reason = reason
             lembur.status = 'SUBMITTED'
             lembur.save()
+
+            if boss_obj.telegram_chat_id:
+                tgl_masuk_jkt = lembur.start_date.astimezone(tz_jakarta)
+                tgl_pulang_jkt = lembur.end_date.astimezone(tz_jakarta)
+                
+                tgl_masuk_bersih = tgl_masuk_jkt.replace(tzinfo=None)
+                tgl_pulang_bersih = tgl_pulang_jkt.replace(tzinfo=None)
+
+                pesan_tgl_masuk = tgl_masuk_bersih.strftime('%d %b %Y, %H:%M')
+                pesan_tgl_pulang = tgl_pulang_bersih.strftime('%d %b %Y, %H:%M')
+
+                message = f"""
+📢 <b>Pengajuan Lembur Baru</b>
+
+Nama: {user.name}
+Jenis: {lembur.duration_minutes} menit
+Tanggal: {pesan_tgl_masuk} s.d. {pesan_tgl_pulang}
+Keterangan: {reason}
+
+https://s.id/asidewa
+
+Silakan klik tautan di atas dan pilih menu <b>Persetujuan Lembur</b> untuk melakukan approval.
+                """
+
+                send_telegram_message(boss_obj.telegram_chat_id, message)
             messages.success(request, 'Pengajuan lembur berhasil diperbarui.')
         else:
             messages.error(request, 'Pengajuan lembur gagal diperbarui.')
