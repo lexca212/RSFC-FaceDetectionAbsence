@@ -160,6 +160,49 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<script>
+document.getElementById('end_date').addEventListener('blur', function() {
+    const mulai = new Date(document.getElementById('start_date').value) || 0;
+    const selesai = new Date(this.value);
+    const sekarang = new Date();
+
+    const opsi = { month: 'long', day: '2-digit', year: 'numeric' };
+  
+    const formatMulai = mulai.toLocaleDateString('en-US', opsi).replace(',', '');
+    const formatSelesai = selesai.toLocaleDateString('en-US', opsi).replace(',', '');
+
+    if (selesai < mulai) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Tanggal tidak valid',
+            text: 'Tanggal selesai tidak boleh lebih awal daripada tanggal mulai!',
+        });
+        this.value = "";
+    }
+
+    if (sekarang > mulai || sekarang > selesai){
+        Swal.fire({
+            icon: 'warning',
+            title: 'Tanggalnya bener ga ?',
+            text: `${formatMulai} s.d. ${formatSelesai}!`,
+            icon: 'warning',
+            showCancelButton: true,
+            cancelButtonColor: '#E0A800',
+            confirmButtonColor: '#28A745',
+            cancelButtonText: 'Ganti Tanggal',
+            confirmButtonText: 'Betull',
+        }).then((result) => {
+            if (result.isConfirmed) {
+
+            } else {
+              this.value = "";
+              document.getElementById('start_date').value = "";
+            }
+        });
+    }
+});
+</script>
+
 
 {% if messages %}
 <script>
