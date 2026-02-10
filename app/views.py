@@ -1182,11 +1182,13 @@ def profile(request, nik):
         email = request.POST.get('email')
         divisi = request.POST.get('divisi')
         password_baru = request.POST.get('password')
+        telegram_chat_id = request.POST.get('telegram_chat_id')
         
         try:
             detail_user.name = name
             detail_user.email = email
             detail_user.divisi = divisi
+            detail_user.telegram_chat_id = telegram_chat_id
 
             if password_baru:
                 detail_user.password = make_password(password_baru)

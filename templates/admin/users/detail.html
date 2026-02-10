@@ -42,6 +42,10 @@
                                     <td>{{ user_detail.email|default:"-" }}</td>
                                 </tr>
                                 <tr>
+                                    <td><b>Telegram Chat ID</b></td>
+                                    <td>{{ user_detail.telegram_chat_id }}</td>
+                                </tr>
+                                <tr>
                                     <td><b>Divisi (Data Master)</b></td>
                                     <td>
                                         {% if division_detail %}

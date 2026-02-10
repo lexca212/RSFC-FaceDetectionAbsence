@@ -1407,6 +1407,7 @@ def editKaryawan(request, nik):
         name = request.POST.get('name')
         email = request.POST.get('email')
         divisi = request.POST.get('divisi')
+        telegram_chat_id = request.POST.get('telegram_chat_id')
         
         is_admin_input = request.POST.get('is_admin')
         is_admin = 1 if is_admin_input == 'on' else 0
@@ -1418,6 +1419,7 @@ def editKaryawan(request, nik):
             detail_user.email = email
             detail_user.divisi = divisi
             detail_user.is_admin = is_admin
+            detail_user.telegram_chat_id = telegram_chat_id
 
             detail_user.save()
 

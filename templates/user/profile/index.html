@@ -48,15 +48,26 @@
                                 </div>
 
                                 <div class="mb-3">
+                                    <label for="id_divisi" class="form-label">Divisi</label>
+                                    <select class="form-control" id="id_divisi" name="divisi" required readonly>
+                                        <option value="{{ division_detail.id }}" selected>{{ division_detail.name }}</option>
+                                    </select>
+                                </div>
+
+                                <hr class="my-4">
+
+                                <h5 class="text-primary mb-3">Data Kontak</h5>
+
+                                <div class="mb-3">
                                     <label for="id_email" class="form-label">Email</label>
                                     <input type="email" class="form-control" id="id_email" name="email" 
                                            value="{{ detail_user.email }}" required>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="id_divisi" class="form-label">Divisi</label>
-                                    <input type="text" class="form-control" id="id_divisi" name="divisi" 
-                                           value="{{ division_detail.name }}" required readonly>
+                                    <label for="telegram_chat_id" class="form-label">Telegram Chat ID</label>
+                                    <input type="text" class="form-control" id="telegram_chat_id" name="telegram_chat_id" 
+                                           value="{{ detail_user.telegram_chat_id }}">
                                 </div>
 
                                 <hr class="my-4">
