@@ -36,7 +36,7 @@ pipeline {
             steps {
                 sshagent(['ssh-vps']) {
                     sh """
-                    ssh -o StrictHostKeyChecking=no lexca@192.168.88.20 '
+                    ssh -o StrictHostKeyChecking=no henoch@192.168.88.20 '
                         cd /home/henoch/RSFC_FaceDetectionAbsence || exit
                         git pull origin main
                         sudo systemctl daemon-reload
