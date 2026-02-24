@@ -27,6 +27,8 @@ urlpatterns = [
     path('users/', include('app.urls')),
 
     path('admins/', include('cms.urls')),
+
+    path('payroll/', include('payroll.urls')),
 ]
 
 if settings.DEBUG:

@@ -11,12 +11,13 @@ class Users(models.Model):
     password = models.CharField(max_length=100)
     face_encoding = models.BinaryField(null=True, blank=True)
     is_admin = models.IntegerField(choices=[
-        (0, 'User'),
-        (1, 'Admin'),
-        (2, 'Super User')
-    ],
-    default=0
-)
+            (0, 'User'),
+            (1, 'Admin'),
+            (2, 'Super User')
+        ],
+        default=0
+    )
+    is_accountant = models.BooleanField(default=False)
     telegram_chat_id = models.CharField(max_length=50, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
