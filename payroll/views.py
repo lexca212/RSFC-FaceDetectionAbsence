@@ -1,4 +1,7 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import Q
+from django.core.paginator import Paginator
+from cms.models import *
 from django.contrib import messages
 from django.contrib.auth.hashers import check_password
 from app.models import *
@@ -153,3 +156,93 @@ def delete_komponen_gaji(request, id):
         messages.error(request, 'Salary component not found')
 
     return redirect('/payroll/komponen_gaji/')
+
+@session_check
+def karyawan(request):
+    user = get_object_or_404(Users, nik=request.session.get('nik_id'))
+
+    query = request.GET.get('q', '').strip()
+
+    all_users = Users.objects.all().order_by('nik')
+
+    if query:
+        all_users = all_users.filter(
+            Q(nik__icontains=query) |
+            Q(name__icontains=query) |
+            Q(email__icontains=query) |
+            Q(divisi__icontains=query)
+        )
+
+    paginator = Paginator(all_users, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    divisi_ids = set(u.divisi for u in page_obj.object_list if u.divisi)
+
+    divisions_map = {
+        div.id: div
+        for div in MasterDivisions.objects.filter(id__in=divisi_ids)
+    }
+
+    for u in page_obj.object_list:
+        u.divisi = divisions_map.get(u.divisi, None)
+
+    context = {
+        'user': user,
+        'page_obj': page_obj,
+        'title': 'Daftar Karyawan',
+        'query': query,
+    }
+
+    return render(request, 'payroll/komponen_gaji_karyawan/index.html', context)
+
+@session_check
+def detail_gaji(request, nik):
+    user = get_object_or_404(Users, nik=request.session.get('nik_id'))
+    karyawan = get_object_or_404(Users, nik=nik)
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+        record_id = request.POST.get("record_id")
+
+        print(request.POST.get("component_id"), request.POST.get("amount"), request.POST.get("start"), request.POST.get("end"))
+
+        if action == "create":
+            UserSalaryComponent.objects.create(
+                nik=karyawan,
+                component_id=request.POST.get("component_id"),
+                amount=request.POST.get("amount"),
+                effective_start=request.POST.get("start"),
+                effective_end=request.POST.get("end") or None
+            )
+            messages.success(request, "Data berhasil ditambahkan")
+
+        elif action == "update" and record_id:
+            obj = UserSalaryComponent.objects.get(id=record_id)
+            obj.component_id = request.POST.get("component_id")
+            obj.amount = request.POST.get("amount")
+            obj.effective_start = request.POST.get("start")
+            obj.effective_end = request.POST.get("end") or None
+            obj.save()
+            messages.success(request, "Data berhasil diupdate")
+
+        elif action == "delete" and record_id:
+            UserSalaryComponent.objects.get(id=record_id).delete()
+            messages.success(request, "Data berhasil dihapus")
+
+        return redirect(request.path)
+
+    components = SalaryComponent.objects.filter(is_active=True).all()
+    user_components = UserSalaryComponent.objects.filter(nik=karyawan).select_related('component').all()
+    divisi = MasterDivisions.objects.filter(id=karyawan.divisi).first()
+    karyawan.divisi = divisi
+
+    context = {
+        'user': user,
+        'title': 'Detail Gaji Karyawan',
+        'karyawan': karyawan,
+        'components': components,
+        'user_components': user_components,
+    }
+
+    return render(request, 'payroll/komponen_gaji_karyawan/detail.html', context)
