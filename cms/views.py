@@ -834,10 +834,11 @@ def edit_jadwal(request, divisi_id, tahun, bulan):
 @login_auth
 @admin_required
 def update_jadwal(request):
+    from django.db import transaction
+    from datetime import date, datetime, time
+
     if request.method != "POST":
         return redirect('/admins/mapping_jadwal')
-
-    from datetime import date, datetime, time
 
     bulan = int(request.POST['bulan'])
     tahun = int(request.POST['tahun'])
@@ -845,70 +846,155 @@ def update_jadwal(request):
     _, jumlah_hari = calendar.monthrange(tahun, bulan)
     tanggal_list = range(1, jumlah_hari + 1)
 
-    users = Users.objects.all()
+    users = list(Users.objects.all())
 
-    for user in users:
-        for tgl in tanggal_list:
-            local_date = date(tahun, bulan, tgl)
+    # ===== PRELOAD SCHEDULE =====
+    schedule_map = {
+        str(s.id): s for s in MasterSchedules.objects.all()
+    }
 
-            safe_datetime = timezone.make_aware(
-                datetime.combine(local_date, time(12, 0))
-            )
+    # ===== PRELOAD MAPPING =====
+    existing_mappings = MappingSchedules.objects.filter(
+        date__year=tahun,
+        date__month=bulan,
+        nik__in=users
+    )
 
-            for shift_order in [1, 2]:
-                shift_key = f"shift_{user.nik}_{tgl}_{shift_order}"
-                shift_id = request.POST.get(shift_key)
+    mapping_dict = {
+        (m.nik_id, m.date, m.shift_order): m
+        for m in existing_mappings
+    }
 
-                mapping = MappingSchedules.objects.filter(
-                    nik=user,
-                    date=local_date,
-                    shift_order=shift_order
-                ).first()
+    # ===== PRELOAD LIBUR ABSENCE =====
+    existing_absences = InAbsences.objects.filter(
+        date__year=tahun,
+        date__month=bulan,
+        nik__in=users
+    )
 
-                if shift_id:
-                    shift = MasterSchedules.objects.filter(id=shift_id).first()
+    absence_dict = {
+        (a.nik_id, a.date, a.shift_order): a
+        for a in existing_absences
+    }
+
+    to_create_mapping = []
+    to_update_mapping = []
+    to_delete_mapping = []
+
+    to_create_absence = []
+    to_update_absence = []
+
+    try:
+        with transaction.atomic():
+
+            for user in users:
+                for tgl in tanggal_list:
+
+                    local_date = date(tahun, bulan, tgl)
+
+                    # hanya shift 1 (real case kamu)
+                    shift_order = 1
+
+                    shift_key = f"shift_{user.nik}_{tgl}_{shift_order}"
+                    shift_id = request.POST.get(shift_key)
+
+                    mapping_key = (user.nik, local_date, shift_order)
+                    mapping = mapping_dict.get(mapping_key)
+
                     if not shift_id or shift_id == "-":
                         if mapping:
-                            mapping.delete()
-                            print(f"Mapping dihapus untuk {user.name} tgl {local_date}")
+                            to_delete_mapping.append(mapping)
                         continue
 
+                    shift = schedule_map.get(shift_id)
+                    if not shift:
+                        continue
+
+                    # ===== HANDLE LIBUR =====
                     if shift.name.upper() == "LIBUR":
-                        InAbsences.objects.update_or_create(
-                            nik=user,
-                            date=local_date,
-                            shift_order=shift_order,
-                            defaults={
-                                "date_in": safe_datetime,
-                                "date_out": safe_datetime,
-                                "status_in": "Libur",
-                                "status_out": "Libur",
-                                "schedule": shift,
-                            }
+
+                        safe_datetime = timezone.make_aware(
+                            datetime.combine(local_date, time(12, 0))
                         )
 
+                        absence = absence_dict.get(mapping_key)
+
+                        if absence:
+                            absence.date_in = safe_datetime
+                            absence.date_out = safe_datetime
+                            absence.status_in = "Libur"
+                            absence.status_out = "Libur"
+                            absence.schedule = shift
+                            to_update_absence.append(absence)
+                        else:
+                            to_create_absence.append(
+                                InAbsences(
+                                    nik=user,
+                                    date=local_date,
+                                    shift_order=shift_order,
+                                    date_in=safe_datetime,
+                                    date_out=safe_datetime,
+                                    status_in="Libur",
+                                    status_out="Libur",
+                                    schedule=shift,
+                                )
+                            )
+                    
                     if shift.name.upper() == "-":
-                        mapping.delete()
+                            mapping.delete()
 
-                    # ========= UPDATE / CREATE MAPPING =========
+                    # ===== HANDLE MAPPING =====
                     if mapping:
-                        mapping.schedule = shift
-                        mapping.save()
+                        if mapping.schedule_id != shift.id:
+                            mapping.schedule = shift
+                            to_update_mapping.append(mapping)
                     else:
-                        MappingSchedules.objects.create(
-                            id=f"{user.nik}_{local_date}_{shift_order}",
-                            nik=user,
-                            date=local_date,
-                            shift_order=shift_order,
-                            schedule=shift
+                        to_create_mapping.append(
+                            MappingSchedules(
+                                id=f"{user.nik}_{local_date}_{shift_order}",
+                                nik=user,
+                                date=local_date,
+                                shift_order=shift_order,
+                                schedule=shift
+                            )
                         )
 
-                # ===============================
-                # JIKA SHIFT DIKOSONGKAN
-                # ===============================
-                # else:
-                #     if mapping:
-                #         mapping.delete()
+            # ===== EXECUTE BULK OPS =====
+
+            if to_delete_mapping:
+                MappingSchedules.objects.filter(
+                    id__in=[m.id for m in to_delete_mapping]
+                ).delete()
+
+            if to_create_mapping:
+                MappingSchedules.objects.bulk_create(
+                    to_create_mapping,
+                    batch_size=500
+                )
+
+            if to_update_mapping:
+                MappingSchedules.objects.bulk_update(
+                    to_update_mapping,
+                    ['schedule'],
+                    batch_size=500
+                )
+
+            if to_create_absence:
+                InAbsences.objects.bulk_create(
+                    to_create_absence,
+                    batch_size=500
+                )
+
+            if to_update_absence:
+                InAbsences.objects.bulk_update(
+                    to_update_absence,
+                    ['date_in', 'date_out', 'status_in', 'status_out', 'schedule'],
+                    batch_size=500
+                )
+
+    except Exception as e:
+        messages.error(request, f"Gagal update jadwal: {e}")
+        return redirect('/admins/mapping_jadwal')
 
     messages.success(request, "Jadwal karyawan berhasil diperbarui.")
     return redirect('/admins/mapping_jadwal')
